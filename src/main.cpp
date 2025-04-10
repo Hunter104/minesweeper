@@ -1,4 +1,11 @@
+#include <cerrno>
+#include <unistd.h>
+#include <cstdlib>
+#include <cstring>
+#include <ctime>
 #include <iostream>
+#include <map>
+#include <stdexcept>
 #include <string>
 #include <vector>
 
@@ -55,7 +62,43 @@ struct Vector2 {
     return os << "(" << v.x << ", " << v.y << ")";
   }
 };
-int main(int argc, char *argv[]) {
+
+class KnowledgeBase {
+private:
+  vector<vector<int>> hasBombVariables;
+  map<int, Vector2> inverseLookupMap;
+  int knowledgeBaseFile;
+public:
+  KnowledgeBase(int width, int height) {
+    int variableCount = 0;
+    hasBombVariables.resize(width);
+    for (int i=0; i<width; i++) {
+      hasBombVariables[i].resize(height);
+      for (int j=0; j<height; j++) {
+        hasBombVariables[i][j] = variableCount;
+        inverseLookupMap[variableCount++] = {i, j};
+      }
+    }
+
+    char filename[] = "Minesweeper.XXXXXX";
+    knowledgeBaseFile = mkstemp(filename);
+    if (knowledgeBaseFile < 0) {
+      string msg = "Error while creating temporary file: ";
+      string error_msg = strerror(errno);
+      throw runtime_error(msg+error_msg);
+    }
+  }
+
+  KnowledgeBase(Vector2 mapSize) {
+    KnowledgeBase(mapSize.x, mapSize.y);
+  }
+
+  ~KnowledgeBase() {
+    close(knowledgeBaseFile);
+  }
+};
+
+int main(void) {
   std::cout << "Hello";
   return 0;
 }
