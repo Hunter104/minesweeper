@@ -99,6 +99,9 @@ public:
 };
 
 int main(void) {
-  std::cout << "Hello";
+  if (system("which clasp > /dev/null 2>&1")) {
+    cerr << "Could not find clasp command, are you sure it is installed?\n";
+    return 1;
+  }
   return 0;
 }
