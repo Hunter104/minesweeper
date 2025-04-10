@@ -1,4 +1,5 @@
 #include <cerrno>
+#include <list>
 #include <unistd.h>
 #include <cstdlib>
 #include <cstring>
@@ -66,7 +67,8 @@ class KnowledgeBase {
 private:
   std::vector<std::vector<int>> hasBombVariables;
   std::map<int, Vector2> inverseLookupMap;
-  int knowledgeBaseFile;
+  std::list<std::list<int>> clauses;
+
 public:
   KnowledgeBase(int width, int height) {
     int variableCount = 0;
@@ -78,22 +80,10 @@ public:
         inverseLookupMap[variableCount++] = {i, j};
       }
     }
-
-    char filename[] = "Minesweeper.XXXXXX";
-    knowledgeBaseFile = mkstemp(filename);
-    if (knowledgeBaseFile < 0) {
-      std::string msg = "Error while creating temporary file: ";
-      std::string error_msg = strerror(errno);
-      throw std::runtime_error(msg+error_msg);
-    }
   }
 
   KnowledgeBase(Vector2 mapSize) {
     KnowledgeBase(mapSize.x, mapSize.y);
-  }
-
-  ~KnowledgeBase() {
-    close(knowledgeBaseFile);
   }
 };
 
