@@ -9,7 +9,6 @@
 #include <string>
 #include <vector>
 
-using namespace std;
 struct Vector2 {
   int x = 0, y = 0;
 
@@ -52,21 +51,21 @@ struct Vector2 {
 
   bool operator!=(const Vector2 &other) const { return !(*this == other); }
 
-  static const vector<Vector2> &AllDirections() {
-    static const vector<Vector2> directions = {
+  static const std::vector<Vector2> &AllDirections() {
+    static const std::vector<Vector2> directions = {
         {-1, -1}, {-1, 0}, {-1, 1}, {0, -1}, {0, 1}, {1, -1}, {1, 0}, {1, 1}};
     return directions;
   }
 
-  friend ostream &operator<<(ostream &os, const Vector2 &v) {
+  friend std::ostream &operator<<(std::ostream &os, const Vector2 &v) {
     return os << "(" << v.x << ", " << v.y << ")";
   }
 };
 
 class KnowledgeBase {
 private:
-  vector<vector<int>> hasBombVariables;
-  map<int, Vector2> inverseLookupMap;
+  std::vector<std::vector<int>> hasBombVariables;
+  std::map<int, Vector2> inverseLookupMap;
   int knowledgeBaseFile;
 public:
   KnowledgeBase(int width, int height) {
@@ -83,9 +82,9 @@ public:
     char filename[] = "Minesweeper.XXXXXX";
     knowledgeBaseFile = mkstemp(filename);
     if (knowledgeBaseFile < 0) {
-      string msg = "Error while creating temporary file: ";
-      string error_msg = strerror(errno);
-      throw runtime_error(msg+error_msg);
+      std::string msg = "Error while creating temporary file: ";
+      std::string error_msg = strerror(errno);
+      throw std::runtime_error(msg+error_msg);
     }
   }
 
@@ -100,7 +99,7 @@ public:
 
 int main(void) {
   if (system("which clasp > /dev/null 2>&1")) {
-    cerr << "Could not find clasp command, are you sure it is installed?\n";
+    std::cerr << "Could not find clasp command, are you sure it is installed?\n";
     return 1;
   }
   return 0;
