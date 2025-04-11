@@ -1,9 +1,11 @@
 #include <cstdio>
 #include <cstdlib>
+#include <exception>
 #include <map>
 #include <sstream>
 #include <stdexcept>
 #include <string>
+#include <string_view>
 #include <unistd.h>
 #include <vector>
 #include "vector2.cpp"
@@ -19,6 +21,20 @@ private:
   std::map<int, Vector2> inverseLookup;
   std::vector<std::vector<int>> clauses;
   int variableCount = 0;
+
+  bool isSatisfiable(const std::string& dimacsCnf) const {
+      FILE* claspIn = popen("clasp - > /dev/null", "w");
+    if (!claspIn)
+      throw std::runtime_error("Failed to start clasp.");
+
+    fwrite(dimacsCnf.c_str(), 1, dimacsCnf.size(), claspIn);
+    int status = pclose(claspIn);
+    if (WIFEXITED(status)) {
+      int code = WEXITSTATUS(status);
+      return code != 20;
+    }
+    throw std::runtime_error("Clasp failed to execute.");
+  }
 public:
   KnowledgeBase(int mapSize) : hasBombVariables(mapSize, mapSize, -1) {
     for (int x=0; x<mapSize; x++) {
@@ -30,30 +46,26 @@ public:
     }
   }
 
-  bool query(int queryVariable) {
+  std::string toDimacsWithClause(const std::vector<int>& additionalClause) const {
     std::ostringstream text;
-    text << "p cnf " << variableCount+1 << ' ' << clauses.size()+1 << '\n';
-    for (auto& clause : clauses) {
-      for (auto& variable : clause) {
-        text << variable << ' ';
-      }
+    text << "p cnf " << variableCount << ' ' << clauses.size() + 1 << '\n';
+    for (const auto& clause : clauses) {
+      for (int var : clause)
+        text << var << ' ';
       text << "0\n";
     }
+    for (int var : additionalClause)
+      text << var << ' ';
+    text << "0\n";
+    return text.str();
+  }
 
-    text << -1*queryVariable << " 0\n";
-
-    FILE *claspIn = popen("clasp - > /dev/null", "w");
-    if (!claspIn) {
-      throw std::runtime_error("Failed to open clasp subprocess.");
-    }
-
-    std::string cnf = text.str();
-    fwrite(cnf.c_str(), 1, cnf.size(), claspIn);
-    if (WEXITSTATUS(pclose(claspIn)) == UNSAT) {
-      clauses.push_back({ queryVariable });
+  bool query(int queryVariable) {
+    std::string dimacs = toDimacsWithClause({-queryVariable});
+    if (!isSatisfiable(dimacs)) {
+      clauses.push_back({queryVariable});
       return true;
     }
-
     return false;
   }
 
