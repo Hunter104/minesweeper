@@ -5,6 +5,9 @@ DEBUGFLAGS=-g
 
 BUILD_DIR=build
 SRC_DIR=src
+TEST_DATA_DIR=test-data
+TEST_FILE=$(TEST_DATA_DIR)/input
+
 MAIN_FILE=$(SRC_DIR)/main.cpp
 
 EXECUTABLE=minesweeper
@@ -24,5 +27,9 @@ clean:
 
 debug: CXXFLAGS += $(DEBUGFLAGS)
 debug: all 
+
+run: $(BUILD_DIR)/$(EXECUTABLE)
+	@echo "Running with file $(TEST_FILE)"
+	./$(BUILD_DIR)/$(EXECUTABLE) < $(TEST_FILE)
 
 .PHONY: all clean debug
