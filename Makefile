@@ -11,15 +11,18 @@ TEST_FILE=$(TEST_DATA_DIR)/input
 MAIN_FILE=$(SRC_DIR)/main.cpp
 
 EXECUTABLE=minesweeper
-
 RM=rm -f
+
+SRC_FILES=$(wildcard $(SRC_DIR)/*.cpp)
+SRC_FILES_EXCLUDING_MAIN=$(filter-out $(MAIN_FILE), $(SRC_FILES))
+
 
 all: $(BUILD_DIR) $(BUILD_DIR)/$(EXECUTABLE)
 
 $(BUILD_DIR):
 	mkdir -p $@
 
-$(BUILD_DIR)/$(EXECUTABLE): $(MAIN_FILE)
+$(BUILD_DIR)/$(EXECUTABLE): $(MAIN_FILE) $(SRC_FILES_EXCLUDING_MAIN)
 	$(CXX) $(CXXFLAGS) $< -o $@
 
 clean:
