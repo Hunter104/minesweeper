@@ -5,6 +5,7 @@
 #include <ctime>
 #include <iostream>
 #include "level.cpp"
+#include "knowledgebase.cpp"
 
 int main(void) {
   if (system("which clasp > /dev/null 2>&1")) {
@@ -12,6 +13,18 @@ int main(void) {
     return 1;
   }
 
-  Level level = Level::createFromStream(std::cin);
-  std::cout << level;
+  // Initialize
+  Level level = Level(std::cin, std::cout);
+  KnowledgeBase kb(level.getSize());
+  while (true) {
+    // auto results = kb.query(level.getOpenCells())
+    // if (results.size == 0)
+    //  break
+    // for (auto& action : results)
+    //   if (action.second == mark)
+    //    level.mark(action.first)
+    //   else 
+    //    level.mark(action.second)
+    // level.update()
+  }
 }

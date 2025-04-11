@@ -46,7 +46,7 @@ public:
 
     std::string result = text.str();
     const char *cText = result.c_str();
-    write(fd, cText, strlen(cText));
+    write(fd, cText, strlen(cText)); // Non buffered, may cause slowdown
     close(fd);
 
     std::string command = "clasp ";
