@@ -7,6 +7,7 @@
 #include <unistd.h>
 #include <vector>
 #include "vector2.cpp"
+#include "matrix2d.cpp"
 #pragma once
 
 constexpr int UNSAT=20;
@@ -14,13 +15,12 @@ constexpr int UNSAT=20;
 // Negative variables are false and positive ones are true
 class KnowledgeBase {
 private:
-  std::vector<std::vector<int>> hasBombVariables;
+  Matrix2D<int> hasBombVariables;
   std::map<int, Vector2> inverseLookup;
   std::vector<std::vector<int>> clauses;
   int variableCount = 0;
 public:
-  KnowledgeBase(int mapSize) :
-  hasBombVariables(mapSize, std::vector<int>(mapSize, -1)){
+  KnowledgeBase(int mapSize) : hasBombVariables(mapSize, mapSize, -1) {
     for (int x=0; x<mapSize; x++) {
       for (int y=0; y<mapSize; y++) {
         hasBombVariables[x][y] = variableCount+1;
@@ -48,7 +48,6 @@ public:
     }
 
     std::string cnf = text.str();
-    std::cout << "RESULTADO\n" << cnf;
     fwrite(cnf.c_str(), 1, cnf.size(), claspIn);
     if (WEXITSTATUS(pclose(claspIn)) == UNSAT) {
       clauses.push_back({ queryVariable });

@@ -19,9 +19,6 @@ int main (int argc, char *argv[]) {
   else
     level = InputLevel::create(std::cin, std::cout);
   KnowledgeBase kb = KnowledgeBase(level->getSize());
-  std::cout << "--- BASE DE CONHECIMENTO ---\n" << kb;
-  // std::cout << kb.query(1) << '\n';
-  // std::cout << *level;
   // while (true) {
   //   kb.getInfo(level)
   //   vector<Vector2, Action> actions = kb.query(level)
