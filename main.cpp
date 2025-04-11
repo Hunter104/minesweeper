@@ -1,6 +1,5 @@
 #include <cerrno>
 #include <istream>
-#include <list>
 #include <optional>
 #include <unistd.h>
 #include <cstdlib>
@@ -8,8 +7,6 @@
 #include <ctime>
 #include <iostream>
 #include <map>
-#include <stdexcept>
-#include <string>
 #include <vector>
 
 struct Vector2 {
