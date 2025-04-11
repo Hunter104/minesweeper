@@ -6,17 +6,18 @@
 #include <iostream>
 #include "level.cpp"
 
-int main(void) {
+int main (int argc, char *argv[]) {
   if (system("which clasp > /dev/null 2>&1")) {
     std::cerr << "Could not find clasp command, are you sure it is installed?\n";
     return 1;
   }
   srand(time(nullptr));
-
   // Initialize
   ILevel *level; 
-  level = InputLevel::create(std::cin, std::cout);
-  level = new GeneratedLevel(14, 40);
+  if (argc > 1 && std::string(argv[1]) == "-g")
+    level = new GeneratedLevel(14, 25);
+  else
+    level = InputLevel::create(std::cin, std::cout);
   std::cout << *level;
   // while (true) {
   //   auto results = kb.query(level.getOpenCells())
