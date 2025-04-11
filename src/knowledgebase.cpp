@@ -42,7 +42,7 @@ public:
 
     text << -1*queryVariable << " 0\n";
 
-    FILE *claspIn = popen("clasp -", "w");
+    FILE *claspIn = popen("clasp - > /dev/null", "w");
     if (!claspIn) {
       throw std::runtime_error("Failed to open clasp subprocess.");
     }
