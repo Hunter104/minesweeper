@@ -63,5 +63,9 @@ struct Vector2 {
   friend std::istream &operator>>(std::istream& in, Vector2& v) {
     return in >> v.x >> v.y;
   }
+
+  static Vector2 getRandom(int max_x, int max_y) {
+    return {rand() % max_x, rand() % max_y};
+  }
 };
 

@@ -12,9 +12,10 @@ int main(void) {
     std::cerr << "Could not find clasp command, are you sure it is installed?\n";
     return 1;
   }
+  srand(time(nullptr));
 
   // Initialize
-  Level level = Level(std::cin, std::cout);
+  InputLevel level = InputLevel::create(std::cin, std::cout);
   KnowledgeBase kb(level.getSize());
   while (true) {
     // auto results = kb.query(level.getOpenCells())
