@@ -9,6 +9,7 @@
 #include "vector2.cpp"
 #pragma once
 
+// Negative variables are false and positive ones are true
 class KnowledgeBase {
 private:
   std::vector<std::vector<int>> hasBombVariables;
@@ -27,7 +28,7 @@ public:
     }
   }
 
-  bool query() {
+  bool query(int queryVariable) {
     char filename[] = "/tmp/minesweeper.XXXXXX";
     int fd = mkstemp(filename);
     if (fd < 0)
@@ -40,6 +41,8 @@ public:
       }
       text << "0\n";
     }
+
+    text << queryVariable << " 0\n";
 
     std::string result = text.str();
     const char *cText = result.c_str();
