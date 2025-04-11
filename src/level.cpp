@@ -72,23 +72,23 @@ private:
     playingField[pos] = value;
   }
 
-  InputLevel(std::istream& in, std::ostream& out, int size, int bombs, int openCells)
-  : in(in), out(out), playingField(size, size) {
+  InputLevel(std::istream& in, std::ostream& out, int size, int bombs)
+  : in(in), out(out), playingField(size, size, -1) {
     this->size = size;
     this->bombCount = bombs < 0 ? std::nullopt : std::make_optional(bombs);
   }
 public:
 
-  static InputLevel create(std::istream& in, std::ostream& out) {
+  static InputLevel* create(std::istream& in, std::ostream& out) {
     int bombs, size, openCellsCount;
     in >> size >> bombs >> openCellsCount;
 
-    InputLevel level(in, out, size, bombs, openCellsCount);
+    InputLevel *level = new InputLevel(in, out, size, bombs);
     for (int i=0; i < openCellsCount; i++) {
       Vector2 pos; 
       int num;
       in >> pos.y >> pos.x >> num;
-      level.setCell(pos, num);
+      level->setCell(pos, num);
     }
     
     return level;
@@ -106,7 +106,7 @@ public:
   void update() override {
     // Print out current actions
     int actionCount = queuedActions.size();
-    out << "actionCount\n";
+    out << actionCount << '\n';
     for (auto& action : queuedActions) {
       out << action.first.y << ' ' << action.first.x << ' ';
       if (action.second == Action::PROBE)
@@ -139,7 +139,7 @@ private:
   
   // Number of bombs around tile, if negative there is a bomb in the tile
   Matrix2D<int> playingField;
-  Matrix2D<bool> discovered;
+  Matrix2D<char> discovered;
 
   inline bool isOutOfBounds(Vector2 pos) {
     return pos.x < 0 || pos.y < 0 || pos.x >= size || pos.y >= size;
@@ -151,6 +151,8 @@ private:
 
     if (playingField[pos] < 0)
       return;
+    else if (playingField[pos] > 0)
+        discovered[pos] = true;
     else if (playingField[pos] == 0 && !discovered[pos]) {
       openCells.push_back({pos, playingField[pos]});
       discovered[pos] = true;
@@ -162,8 +164,8 @@ private:
   
 public:
   GeneratedLevel(int size, int bombCount) :
-  playingField(size, size),
-  discovered(size, size)
+  playingField(size, size, 0),
+  discovered(size, size, 0)
   {
     if (bombCount <= 0)
       throw std::runtime_error("Bombcount must be 1 or higher");
@@ -171,7 +173,6 @@ public:
     this->bombCount = std::optional(bombCount);
 
     Vector2 initial_probe = Vector2::getRandom(size, size);
-    discovered[initial_probe] = true;
     openCells.push_back({initial_probe, playingField[initial_probe]});
 
     int placed = 0;
@@ -184,14 +185,21 @@ public:
       placed++;
 
       for (auto& adjacent : Vector2::AllDirections()) {
-          if (!isOutOfBounds(adjacent))
-            playingField[adjacent]++;
+          if (!isOutOfBounds(pos+adjacent)) {
+            playingField[pos+adjacent]++;
+          } 
       }
     }
+
+    probe(initial_probe);
+  }
+
+  void update() override {
+    std::cout << "Updated\n";
   }
 
   void mark(Vector2 pos) override {
-    // TODO: implement
+    std::cout << "Marked: " << pos << '\n';
   }
 
   void probe(Vector2 pos) override {
@@ -205,6 +213,6 @@ public:
   }
 
   int getCell(Vector2 pos) const override {
-    return discovered[pos.x][pos.y] ? playingField[pos.x][pos.y] : -1;
+    return discovered[pos] ? playingField[pos] : -1;
   }
 };

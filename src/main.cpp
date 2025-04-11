@@ -5,7 +5,6 @@
 #include <ctime>
 #include <iostream>
 #include "level.cpp"
-#include "knowledgebase.cpp"
 
 int main(void) {
   if (system("which clasp > /dev/null 2>&1")) {
@@ -15,17 +14,21 @@ int main(void) {
   srand(time(nullptr));
 
   // Initialize
-  InputLevel level = InputLevel::create(std::cin, std::cout);
-  KnowledgeBase kb(level.getSize());
-  while (true) {
-    // auto results = kb.query(level.getOpenCells())
-    // if (results.size == 0)
-    //  break
-    // for (auto& action : results)
-    //   if (action.second == mark)
-    //    level.mark(action.first)
-    //   else 
-    //    level.mark(action.second)
-    // level.update()
-  }
+  ILevel *level; 
+  level = InputLevel::create(std::cin, std::cout);
+  level = new GeneratedLevel(14, 40);
+  std::cout << *level;
+  // while (true) {
+  //   auto results = kb.query(level.getOpenCells())
+  //   if (results.size == 0)
+  //    break
+  //   for (auto& action : results)
+  //     if (action.second == mark)
+  //      level.mark(action.first)
+  //     else 
+  //      level.mark(action.second)
+  //   level.update()
+  // }
+
+  delete level;
 }
