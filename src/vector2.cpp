@@ -1,3 +1,4 @@
+#pragma once
 #include <cerrno>
 #include <istream>
 #include <unistd.h>
@@ -6,7 +7,6 @@
 #include <ctime>
 #include <iostream>
 #include <vector>
-#pragma once
 
 struct Vector2 {
   int x = 0, y = 0;

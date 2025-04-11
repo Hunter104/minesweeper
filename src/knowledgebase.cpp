@@ -9,6 +9,8 @@
 #include "vector2.cpp"
 #pragma once
 
+constexpr int UNSAT=20;
+
 // Negative variables are false and positive ones are true
 class KnowledgeBase {
 private:
@@ -22,19 +24,15 @@ public:
     for (int x=0; x<mapSize; x++) {
       for (int y=0; y<mapSize; y++) {
         hasBombVariables[x][y] = variableCount+1;
-        inverseLookup[variableCount+1] =  {x, y};
+        inverseLookup[variableCount+1] = {x, y};
         variableCount++;
       }
     }
   }
 
   bool query(int queryVariable) {
-    char filename[] = "/tmp/minesweeper.XXXXXX";
-    int fd = mkstemp(filename);
-    if (fd < 0)
-      throw std::runtime_error("Could not create tempfile.");
     std::ostringstream text;
-    text << "p cnf " << variableCount << clauses.size() << '\n';
+    text << "p cnf " << variableCount+1 << ' ' << clauses.size()+1 << '\n';
     for (auto& clause : clauses) {
       for (auto& variable : clause) {
         text << variable << ' ';
@@ -42,20 +40,32 @@ public:
       text << "0\n";
     }
 
-    text << queryVariable << " 0\n";
+    text << -1*queryVariable << " 0\n";
 
-    std::string result = text.str();
-    const char *cText = result.c_str();
-    write(fd, cText, strlen(cText)); // Non buffered, may cause slowdown
-    close(fd);
+    FILE *claspIn = popen("clasp -", "w");
+    if (!claspIn) {
+      throw std::runtime_error("Failed to open clasp subprocess.");
+    }
 
-    std::string command = "clasp ";
-    command += filename;
-    command += " > /dev/null";
+    std::string cnf = text.str();
+    std::cout << "RESULTADO\n" << cnf;
+    fwrite(cnf.c_str(), 1, cnf.size(), claspIn);
+    if (WEXITSTATUS(pclose(claspIn)) == UNSAT) {
+      clauses.push_back({ queryVariable });
+      return true;
+    }
 
-    int rc = std::system(command.c_str());
+    return false;
+  }
 
-    unlink(filename);
-    return rc == 20;
+  friend std::ostream& operator<<(std::ostream& os, const KnowledgeBase& kb) {
+    os << "p cnf " << kb.variableCount << ' ' << kb.clauses.size() << '\n';
+    for (auto& clause : kb.clauses) {
+      for (auto& variable : clause) {
+        os << variable << ' ';
+      }
+      os << "0\n";
+    }
+    return os;
   }
 };

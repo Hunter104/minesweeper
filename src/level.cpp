@@ -19,7 +19,7 @@ protected:
   std::vector<std::pair<Vector2, int>> openCells;
 
 public:
-  virtual void update() = 0;
+  virtual bool update() = 0;
 
   // TODO: loading actions directly might be more efficient
   virtual void mark(Vector2 pos) = 0;
@@ -103,10 +103,13 @@ public:
   }
 
   // TODO: how to deal with end condition
-  void update() override {
+  bool update() override {
     // Print out current actions
     int actionCount = queuedActions.size();
     out << actionCount << '\n';
+    if (actionCount == 0)
+      return false;
+
     for (auto& action : queuedActions) {
       out << action.first.y << ' ' << action.first.x << ' ';
       if (action.second == Action::PROBE)
@@ -126,6 +129,8 @@ public:
       in >> pos.y >> pos.x >> num;
       setCell(pos, num);
     }
+
+    return true;
   }
 
   
@@ -190,12 +195,12 @@ public:
           } 
       }
     }
-
     probe(initial_probe);
   }
 
-  void update() override {
+  bool update() override {
     std::cout << "Updated\n";
+    return true;
   }
 
   void mark(Vector2 pos) override {
