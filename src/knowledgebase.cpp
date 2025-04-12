@@ -6,10 +6,13 @@
 #include <string>
 #include <unistd.h>
 #include <vector>
+#include <algorithm>
 #include "vector2.cpp"
 #pragma once
 
 constexpr int UNSAT=20;
+
+void generateCombinations(const std::vector<int>& variables, int r, std::vector<std::vector<int>>& result, std::vector<int>& current, int start);
 
 // Negative variables are false and positive ones are true
 class KnowledgeBase {
@@ -68,4 +71,59 @@ public:
     }
     return os;
   }
+
+  void generateClauses(const std::vector<int>& variables, int k) {
+    int n = variables.size();
+
+    // Caso especial k=0
+    if (k == 0) {
+        for (int var : variables) {
+            clauses.push_back({-var});
+        }
+        return;
+    }
+
+    // Caso especial k=n
+    if (k == n) {
+        for (int var : variables) {
+            clauses.push_back({var});
+        }
+        return;
+    }
+
+    // L
+    int rL = n - k + 1;
+    std::vector<std::vector<int>> combinationsL;
+    std::vector<int> currentL;
+    generateCombinations(variables, rL, combinationsL, currentL, 0);
+    for (const auto& combination : combinationsL) {
+        clauses.push_back(combination);
+    }
+
+    // U
+    int rU = k + 1;
+    std::vector<std::vector<int>> combinationsU;
+    std::vector<int> currentU;
+    generateCombinations(variables, rU, combinationsU, currentU, 0);
+    for (const auto& combination : combinationsU) {
+        std::vector<int> negatedCombination;
+        for (int var : combination) {
+            negatedCombination.push_back(-var);
+        }
+        clauses.push_back(negatedCombination);
+    }
+  }
 };
+
+// Função geradora de combinações
+void generateCombinations(const std::vector<int>& variables, int r, std::vector<std::vector<int>>& result, std::vector<int>& current, int start) {
+    if (current.size() == r) {
+        result.push_back(current);
+        return;
+    }
+    for (int i = start; i < variables.size(); ++i) {
+        current.push_back(variables[i]);
+        generateCombinations(variables, r, result, current, i + 1);
+        current.pop_back();
+    }
+}
