@@ -1,7 +1,7 @@
 # Para build unity só é preciso compilar um arquivo
 CXX=g++
 CXXFLAGS=-Wall -Wextra -Werror
-DEBUGFLAGS=-g
+DEBUGFLAGS=-ggdb3
 
 BUILD_DIR=build
 SRC_DIR=src
