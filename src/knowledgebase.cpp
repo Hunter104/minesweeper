@@ -117,11 +117,11 @@ public:
 
 // Função geradora de combinações
 void generateCombinations(const std::vector<int>& variables, int r, std::vector<std::vector<int>>& result, std::vector<int>& current, int start) {
-    if (current.size() == r) {
+    if (static_cast<int>(current.size()) == r) {
         result.push_back(current);
         return;
     }
-    for (int i = start; i < variables.size(); ++i) {
+    for (int i = start; i < static_cast<int>(variables.size()); ++i) {
         current.push_back(variables[i]);
         generateCombinations(variables, r, result, current, i + 1);
         current.pop_back();
