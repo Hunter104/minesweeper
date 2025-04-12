@@ -1,11 +1,11 @@
 #pragma once
 #include <cerrno>
-#include <istream>
-#include <unistd.h>
 #include <cstdlib>
 #include <cstring>
 #include <ctime>
 #include <iostream>
+#include <istream>
+#include <unistd.h>
 #include <vector>
 
 struct Vector2 {
@@ -60,7 +60,7 @@ struct Vector2 {
     return os << "(" << v.x << ", " << v.y << ")";
   }
 
-  friend std::istream &operator>>(std::istream& in, Vector2& v) {
+  friend std::istream &operator>>(std::istream &in, Vector2 &v) {
     return in >> v.x >> v.y;
   }
 
@@ -68,4 +68,3 @@ struct Vector2 {
     return {rand() % max_x, rand() % max_y};
   }
 };
-

@@ -1,16 +1,16 @@
 #pragma once
-#include <iostream>
-#include <sstream>
-#include <stdexcept>
-#include <vector>
-#include <optional>
 #include <cstdlib>
 #include <cstring>
 #include <ctime>
+#include <iostream>
+#include <optional>
+#include <sstream>
+#include <stdexcept>
 #include <unistd.h>
+#include <vector>
 
-#include "vector2.cpp"
 #include "matrix2d.cpp"
+#include "vector2.cpp"
 
 class ILevel {
 protected:
@@ -29,27 +29,23 @@ public:
 
   virtual ~ILevel() = default;
 
-  virtual int getSize() const {
-    return size;
-  }
+  virtual int getSize() const { return size; }
 
-  std::optional<int> getBombCount() const {
-    return bombCount;
-  }
+  std::optional<int> getBombCount() const { return bombCount; }
 
-  const std::vector<std::pair<Vector2, int>>& getOpenCells() const {
+  const std::vector<std::pair<Vector2, int>> &getOpenCells() const {
     return openCells;
   }
 
-  friend std::ostream& operator<<(std::ostream& os, const ILevel& level) {
-    for (int i=0; i<level.size; i++) {
-      for (int j=0; j<level.size; j++) {
-        int tile = level.getCell({i, j}); 
+  friend std::ostream &operator<<(std::ostream &os, const ILevel &level) {
+    for (int i = 0; i < level.size; i++) {
+      for (int j = 0; j < level.size; j++) {
+        int tile = level.getCell({i, j});
         if (tile == -1)
           os << "# ";
         else if (tile == 0)
           os << ". ";
-        else 
+        else
           os << tile << ' ';
       }
       os << '\n';
@@ -72,29 +68,29 @@ private:
     playingField[pos] = value;
   }
 
-  InputLevel(std::istream& in, std::ostream& out, int size, int bombs)
-  : in(in), out(out), playingField(size, size, -1) {
+  InputLevel(std::istream &in, std::ostream &out, int size, int bombs)
+      : in(in), out(out), playingField(size, size, -1) {
     this->size = size;
     this->bombCount = bombs < 0 ? std::nullopt : std::make_optional(bombs);
   }
-public:
 
-  static InputLevel* create(std::istream& in, std::ostream& out) {
+public:
+  static InputLevel *create(std::istream &in, std::ostream &out) {
     int bombs, size, openCellsCount;
     in >> size >> bombs >> openCellsCount;
 
     InputLevel *level = new InputLevel(in, out, size, bombs);
-    for (int i=0; i < openCellsCount; i++) {
-      Vector2 pos; 
+    for (int i = 0; i < openCellsCount; i++) {
+      Vector2 pos;
       int num;
       in >> pos.y >> pos.x >> num;
       level->setCell(pos, num);
     }
-    
+
     return level;
   }
 
-  void mark(Vector2 pos) override { 
+  void mark(Vector2 pos) override {
     queuedActions.push_back({pos, Action::MARK});
   }
 
@@ -110,11 +106,11 @@ public:
     if (actionCount == 0)
       return false;
 
-    for (auto& action : queuedActions) {
+    for (auto &action : queuedActions) {
       out << action.first.y << ' ' << action.first.x << ' ';
       if (action.second == Action::PROBE)
         out << 'A';
-      else 
+      else
         out << 'B';
       out << '\n';
     }
@@ -123,8 +119,8 @@ public:
     // Receive next board state
     int openCellsCount;
     in >> openCellsCount;
-    for (int i=0; i < openCellsCount; i++) {
-      Vector2 pos; 
+    for (int i = 0; i < openCellsCount; i++) {
+      Vector2 pos;
       int num;
       in >> pos.y >> pos.x >> num;
       setCell(pos, num);
@@ -133,15 +129,11 @@ public:
     return true;
   }
 
-  
-  inline int getCell(Vector2 pos) const override {
-    return playingField[pos];
-  }
+  inline int getCell(Vector2 pos) const override { return playingField[pos]; }
 };
 
 class GeneratedLevel : public ILevel {
 private:
-  
   // Number of bombs around tile, if negative there is a bomb in the tile
   Matrix2D<int> playingField;
   Matrix2D<char> discovered;
@@ -157,21 +149,19 @@ private:
     if (playingField[pos] < 0)
       return;
     else if (playingField[pos] > 0)
-        discovered[pos] = true;
+      discovered[pos] = true;
     else if (playingField[pos] == 0 && !discovered[pos]) {
       openCells.push_back({pos, playingField[pos]});
       discovered[pos] = true;
-      for (auto& direction : Vector2::AllDirections()) {
-        revealCells(direction+pos);
+      for (auto &direction : Vector2::AllDirections()) {
+        revealCells(direction + pos);
       }
     }
   }
-  
+
 public:
-  GeneratedLevel(int size, int bombCount) :
-  playingField(size, size, 0),
-  discovered(size, size, 0)
-  {
+  GeneratedLevel(int size, int bombCount)
+      : playingField(size, size, 0), discovered(size, size, 0) {
     if (bombCount <= 0)
       throw std::runtime_error("Bombcount must be 1 or higher");
     this->size = size;
@@ -183,16 +173,16 @@ public:
     int placed = 0;
     while (placed < bombCount) {
       Vector2 pos = Vector2::getRandom(size, size);
-      if (pos == initial_probe || playingField[pos] == -1) 
+      if (pos == initial_probe || playingField[pos] == -1)
         continue;
 
       playingField[pos] = -20;
       placed++;
 
-      for (auto& adjacent : Vector2::AllDirections()) {
-          if (!isOutOfBounds(pos+adjacent)) {
-            playingField[pos+adjacent]++;
-          } 
+      for (auto &adjacent : Vector2::AllDirections()) {
+        if (!isOutOfBounds(pos + adjacent)) {
+          playingField[pos + adjacent]++;
+        }
       }
     }
     probe(initial_probe);
@@ -203,9 +193,7 @@ public:
     return true;
   }
 
-  void mark(Vector2 pos) override {
-    std::cout << "Marked: " << pos << '\n';
-  }
+  void mark(Vector2 pos) override { std::cout << "Marked: " << pos << '\n'; }
 
   void probe(Vector2 pos) override {
     if (playingField[pos] < 0) {

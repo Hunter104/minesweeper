@@ -1,24 +1,25 @@
+#include "knowledgebase.cpp"
+#include "level.cpp"
 #include <cerrno>
-#include <unistd.h>
 #include <cstdlib>
 #include <cstring>
 #include <ctime>
 #include <iostream>
-#include "level.cpp"
-#include "knowledgebase.cpp"
+#include <unistd.h>
 
 // Testa funcao que gera clausulas
 void testGenerateClauses() {
-    KnowledgeBase kb(5);
-    std::vector<int> variables = {1, 2, 3, 4, 5, 6, 7, 8};
-    int k = 4;
-    kb.generateClauses(variables, k);
-    std::cout << kb;
+  KnowledgeBase kb(5);
+  std::vector<int> variables = {1, 2, 3, 4, 5, 6, 7, 8};
+  int k = 4;
+  kb.generateClauses(variables, k);
+  std::cout << kb;
 }
 
-int main (int argc, char *argv[]) {
+int main(int argc, char *argv[]) {
   if (system("which clasp > /dev/null 2>&1")) {
-    std::cerr << "Could not find clasp command, are you sure it is installed?\n";
+    std::cerr
+        << "Could not find clasp command, are you sure it is installed?\n";
     return 1;
   }
 
@@ -29,7 +30,7 @@ int main (int argc, char *argv[]) {
   }
 
   srand(time(nullptr));
-  ILevel *level; 
+  ILevel *level;
   if (argc > 1 && std::string(argv[1]) == "-g")
     level = new GeneratedLevel(14, 25);
   else
@@ -41,7 +42,7 @@ int main (int argc, char *argv[]) {
   //   for (auto& action : results)
   //     if (action.second == mark)
   //      level.mark(action.first)
-  //     else 
+  //     else
   //      level.probe(action.second)
   //   if (! level.update())
   //    break;
