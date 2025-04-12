@@ -1,11 +1,9 @@
 #include <cstdio>
 #include <cstdlib>
-#include <exception>
 #include <map>
 #include <sstream>
 #include <stdexcept>
 #include <string>
-#include <string_view>
 #include <unistd.h>
 #include <vector>
 #include "vector2.cpp"
@@ -23,7 +21,7 @@ private:
   int variableCount = 0;
 
   bool isSatisfiable(const std::string& dimacsCnf) const {
-      FILE* claspIn = popen("clasp - > /dev/null", "w");
+    FILE* claspIn = popen("clasp - > /dev/null", "w");
     if (!claspIn)
       throw std::runtime_error("Failed to start clasp.");
 
@@ -60,13 +58,16 @@ public:
     return text.str();
   }
 
-  bool query(int queryVariable) {
-    std::string dimacs = toDimacsWithClause({-queryVariable});
-    if (!isSatisfiable(dimacs)) {
-      clauses.push_back({queryVariable});
-      return true;
-    }
-    return false;
+  /* Query bomb existence in tile, 
+  second parameter indicates wether we query 
+  its existence or lack thereof */
+  bool checkBomb(Vector2 tile, bool checkExists = true) {
+    int modifier = checkExists ? 1 : -1;
+    int variable = modifier * hasBombVariables[tile];
+    std::string dimacs = toDimacsWithClause({-variable});
+    if (isSatisfiable(dimacs)) return false;
+    clauses.push_back({variable});
+    return true;
   }
 
   friend std::ostream& operator<<(std::ostream& os, const KnowledgeBase& kb) {
