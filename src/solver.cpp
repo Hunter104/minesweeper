@@ -6,9 +6,9 @@
 #include <string>
 #include <vector>
 #ifdef DEBUG
-constexpr char command[] = "clasp - > /dev/null";
-#else
 constexpr char command[] = "clasp -";
+#else
+constexpr char command[] = "clasp - > /dev/null";
 #endif
 
 constexpr int UNSAT = 20;
