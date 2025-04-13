@@ -1,9 +1,8 @@
 #pragma once
+#include <cstdio>
 #include <ostream>
-#include <sstream>
 #include <stdexcept>
 #include <string>
-#include <string_view>
 #include <vector>
 #ifdef DEBUG
 constexpr char command[] = "clasp - > /dev/null";
@@ -17,37 +16,36 @@ constexpr int UNSAT = 20;
 class Solver {
 private:
   int variableCount;
-  std::vector<std::vector<int>> clauses;
+  int clauseCount;
+  std::string clauses;
 
-  std::string toDimacs(const std::vector<int> &additionalClause = {}) const {
-    std::ostringstream text;
-    text << "p cnf " << variableCount << ' '
-         << clauses.size() + (additionalClause.empty() ? 0 : 1) << '\n';
-    for (const auto &clause : clauses) {
-      for (int var : clause)
-        text << var << ' ';
-      text << "0\n";
-    }
-    if (!additionalClause.empty()) {
-      for (int var : additionalClause)
-        text << var << ' ';
-      text << "0\n";
-    }
-    return text.str();
+  inline std::string clausetoString(const std::vector<int> &clause) const {
+    std::string result;
+    result.reserve(clause.size() * 12 + 2);
+    for (int variable : clause)
+      result += std::to_string(variable) + " ";
+    result += "0\n";
+    return result;
   }
 
-  bool isSatisfiable(std::string_view dimacsCnf) const {
+  bool isSatisfiable(const std::vector<int> &assumption = {}) const {
     FILE *claspIn = popen(command, "w");
     if (!claspIn)
       throw std::runtime_error("Failed to start clasp.");
 
-    fwrite(dimacsCnf.data(), 1, dimacsCnf.size(), claspIn);
-    int status = pclose(claspIn);
+    int realClauseCount = assumption.empty() ? clauseCount : clauseCount + 1;
+    std::fprintf(claspIn, "p cnf %d %d\n", variableCount, realClauseCount);
+    std::fprintf(claspIn, "%s", clauses.c_str());
+    if (!assumption.empty())
+      std::fprintf(claspIn, "%s", clausetoString(assumption).c_str());
 
-    if (WIFEXITED(status))
-      return WEXITSTATUS(status) != UNSAT;
+    const int status = pclose(claspIn);
+    if (!WIFEXITED(status)) {
+      throw std::runtime_error("Clasp failed to execute with status code: " +
+                               std::to_string(status));
+    }
 
-    throw std::runtime_error("Clasp failed to execute.");
+    return WEXITSTATUS(status) != UNSAT;
   }
 
 public:
@@ -57,21 +55,24 @@ public:
   }
 
   // Clasp starts indexing from 1
-  int addVariable() { return ++variableCount; }
+  inline int addVariable() { return ++variableCount; }
 
-  void addClause(const std::vector<int> &clause) { clauses.push_back(clause); }
+  void addClause(const std::vector<int> &clause) {
+    clauseCount++;
+    clauses += clausetoString(clause);
+  }
 
   /* True = satisfiable
    * False = unsatisfiable
    */
-  bool solve() { return isSatisfiable(toDimacs()); }
+  bool solve() const { return isSatisfiable(); }
 
-  bool solve(const std::vector<int> &assumption) {
-    return isSatisfiable(toDimacs(assumption));
+  bool solve(const std::vector<int> &assumption) const {
+    return isSatisfiable(assumption);
   }
 
   friend std::ostream &operator<<(std::ostream &os, const Solver &s) {
-    os << s.toDimacs();
+    os << s.clauses;
     return os;
   }
 };
