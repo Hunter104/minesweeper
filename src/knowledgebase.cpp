@@ -44,12 +44,13 @@ public:
   /* Query bomb existence in tile,
   second parameter indicates wether we query
   its existence or lack thereof */
-  bool checkBomb(Vector2 tile, bool checkExists = true) {
-    int modifier = checkExists ? 1 : -1;
-    int variable = modifier * hasBombVariables[tile];
-    if (solver.solve({-variable}))
+  bool checkBomb(Vector2 tile, bool exists = true) {
+    int var = hasBombVariables[tile];
+    var = exists ? var : -var;
+
+    if (solver.solve({-var}))
       return false;
-    solver.addClause({variable});
+    solver.addClause({var});
     return true;
   }
 
