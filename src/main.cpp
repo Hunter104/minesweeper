@@ -1,12 +1,12 @@
 #include "knowledgebase.cpp"
 #include "level.cpp"
+#include <argp.h>
 #include <cerrno>
 #include <cstdlib>
 #include <cstring>
 #include <ctime>
 #include <iostream>
 #include <unistd.h>
-#include <argp.h>
 
 // Testa funcao que gera clausulas
 void testGenerateClauses() {
@@ -20,7 +20,7 @@ void testGenerateClauses() {
 int main(int argc, char *argv[]) {
   srand(time(nullptr));
   // Test flag check
-  
+
   ILevel *level;
   if (argc > 1) {
     std::string first = std::string(argv[1]);
@@ -28,9 +28,9 @@ int main(int argc, char *argv[]) {
       testGenerateClauses();
       return EXIT_SUCCESS;
     }
-    if (first == "-g") 
+    if (first == "-g")
       level = new GeneratedLevel(14, 25);
-    else 
+    else
       level = InputLevel::create(std::cin, std::cout);
   }
   KnowledgeBase kb = KnowledgeBase(level->getSize());

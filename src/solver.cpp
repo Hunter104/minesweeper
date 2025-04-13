@@ -3,10 +3,10 @@
 #include <sstream>
 #include <stdexcept>
 #include <vector>
-#ifdef DEBUG 
-  constexpr char command[] = "clasp - > /dev/null";
-#else 
-  constexpr char command[] = "clasp -";
+#ifdef DEBUG
+constexpr char command[] = "clasp - > /dev/null";
+#else
+constexpr char command[] = "clasp -";
 #endif
 
 constexpr int UNSAT = 20;
