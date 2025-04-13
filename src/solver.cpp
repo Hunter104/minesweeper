@@ -3,6 +3,11 @@
 #include <sstream>
 #include <stdexcept>
 #include <vector>
+#ifdef DEBUG 
+  constexpr char command[] = "clasp - > /dev/null";
+#else 
+  constexpr char command[] = "clasp -";
+#endif
 
 constexpr int UNSAT = 20;
 
@@ -53,14 +58,10 @@ private:
   }
 
 public:
-  Solver(bool debug = false) {
+  Solver() {
     if (system("which clasp > /dev/null 2>&1"))
       throw std::runtime_error(
           "Could not find clasp command, are you sure it is installed?");
-    if (debug)
-      command = "clasp -";
-    else
-      command = "clasp - > /dev/null";
   }
 
   // Clasp starts indexing from 1

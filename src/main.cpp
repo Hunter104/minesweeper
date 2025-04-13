@@ -6,6 +6,7 @@
 #include <ctime>
 #include <iostream>
 #include <unistd.h>
+#include <argp.h>
 
 // Testa funcao que gera clausulas
 void testGenerateClauses() {
@@ -17,25 +18,23 @@ void testGenerateClauses() {
 }
 
 int main(int argc, char *argv[]) {
-  if (system("which clasp > /dev/null 2>&1")) {
-    std::cerr
-        << "Could not find clasp command, are you sure it is installed?\n";
-    return 1;
-  }
-
-  // Test flag check
-  if (argc > 1 && std::string(argv[1]) == "--test") {
-    testGenerateClauses();
-    return EXIT_SUCCESS;
-  }
-
   srand(time(nullptr));
+  // Test flag check
+  
   ILevel *level;
-  if (argc > 1 && std::string(argv[1]) == "-g")
-    level = new GeneratedLevel(14, 25);
-  else
-    level = InputLevel::create(std::cin, std::cout);
+  if (argc > 1) {
+    std::string first = std::string(argv[1]);
+    if (first == "--test") {
+      testGenerateClauses();
+      return EXIT_SUCCESS;
+    }
+    if (first == "-g") 
+      level = new GeneratedLevel(14, 25);
+    else 
+      level = InputLevel::create(std::cin, std::cout);
+  }
   KnowledgeBase kb = KnowledgeBase(level->getSize());
+
   // while (true) {
   //   kb.getInfo(level)
   //   vector<Vector2, Action> actions = kb.query(level)
@@ -49,6 +48,5 @@ int main(int argc, char *argv[]) {
   // }
 
   delete level;
-
   return EXIT_SUCCESS;
 }

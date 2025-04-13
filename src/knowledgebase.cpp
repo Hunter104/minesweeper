@@ -5,8 +5,6 @@
 #include <cstdio>
 #include <cstdlib>
 #include <map>
-#include <stdexcept>
-#include <string>
 #include <unistd.h>
 #include <vector>
 
@@ -32,27 +30,12 @@ private:
   std::map<int, Vector2> inverseLookup;
   Solver solver;
 
-  bool isSatisfiable(const std::string &dimacsCnf) const {
-    FILE *claspIn = popen("clasp - > /dev/null", "w");
-    if (!claspIn)
-      throw std::runtime_error("Failed to start clasp.");
-
-    fwrite(dimacsCnf.c_str(), 1, dimacsCnf.size(), claspIn);
-    int status = pclose(claspIn);
-    if (WIFEXITED(status)) {
-      int code = WEXITSTATUS(status);
-      return code != 20;
-    }
-    throw std::runtime_error("Clasp failed to execute.");
-  }
-
 public:
   KnowledgeBase(int mapSize) : hasBombVariables(mapSize, mapSize, -1) {
     for (int x = 0; x < mapSize; x++) {
       for (int y = 0; y < mapSize; y++) {
         int variable = solver.addVariable();
         hasBombVariables[x][y] = variable;
-        // Variable starts indexing at 1
         inverseLookup[variable - 1] = {x, y};
       }
     }
