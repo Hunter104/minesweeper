@@ -1,5 +1,6 @@
 #pragma once
 #include <cstdio>
+#include <cstdlib>
 #include <ostream>
 #include <stdexcept>
 #include <string>
@@ -15,9 +16,9 @@ constexpr int UNSAT = 20;
 // Clasp wrapper, similar to minisat's solver class
 class Solver {
 private:
-  int variableCount;
-  int clauseCount;
-  std::string clauses;
+  int variableCount = 0;
+  int clauseCount = 0;
+  std::string clauses = "";
 
   inline std::string clausetoString(const std::vector<int> &clause) const {
     std::string result;
@@ -45,7 +46,12 @@ private:
                                std::to_string(status));
     }
 
-    return WEXITSTATUS(status) != UNSAT;
+    if (WEXITSTATUS(status) == 20)
+      return false;
+    else if (WEXITSTATUS(status) == 10)
+      return true;
+    else 
+      throw std::runtime_error("Clasp failed with status code: " + std::to_string(WEXITSTATUS(status)));
   }
 
 public:
