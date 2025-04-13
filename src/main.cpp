@@ -1,39 +1,66 @@
 #include "knowledgebase.cpp"
 #include "level.cpp"
 #include <argp.h>
+#include <bits/getopt_core.h>
 #include <cerrno>
 #include <cstdlib>
 #include <cstring>
 #include <ctime>
-#include <iostream>
 #include <unistd.h>
 
-// Testa funcao que gera clausulas
-void testGenerateClauses() {
-  KnowledgeBase kb(5);
-  std::vector<int> variables = {1, 2, 3, 4, 5, 6, 7, 8};
-  int k = 4;
-  kb.generateClauses(variables, k);
-  std::cout << kb;
+struct Arguments {
+  bool test = false;
+  bool generate = false;
+  int size = 10;
+  int bombs = 20;
+};
+
+Arguments parse_args(int argc, char *argv[]) {
+  Arguments args;
+
+  int opt;
+  while ((opt = getopt(argc, argv, "htgs:b:")) != -1) {
+    switch (opt) {
+    case 't':
+      args.test = true;
+      break;
+    case 'g':
+      args.generate = true;
+      break;
+    case 's':
+      args.size = std::atoi(optarg);
+      break;
+    case 'b':
+      args.bombs = std::atoi(optarg);
+      break;
+    case 'h':
+      std::cerr << "Usage: " << argv[0] << " [-t] [-g] [-s size] [-b bombs]\n";
+      std::exit(EXIT_SUCCESS);
+    default:
+      std::cerr << "Usage: " << argv[0] << " [-t] [-g] [-s size] [-b bombs]\n";
+      std::exit(EXIT_FAILURE);
+    }
+  }
+
+  return args;
 }
 
 int main(int argc, char *argv[]) {
-  srand(time(nullptr));
-  // Test flag check
+  std::srand(static_cast<unsigned>(std::time(nullptr)));
 
-  ILevel *level;
-  if (argc > 1) {
-    std::string first = std::string(argv[1]);
-    if (first == "--test") {
-      testGenerateClauses();
-      return EXIT_SUCCESS;
-    }
-    if (first == "-g")
-      level = new GeneratedLevel(14, 25);
-    else
-      level = InputLevel::create(std::cin, std::cout);
+  Arguments args = parse_args(argc, argv);
+  if (args.test) {
+    testGenerateClauses();
+    return EXIT_SUCCESS;
   }
-  KnowledgeBase kb = KnowledgeBase(level->getSize());
+
+  ILevel *level = nullptr;
+  if (args.generate)
+    level = new GeneratedLevel(args.size, args.bombs);
+  else
+    level = InputLevel::create(std::cin, std::cout);
+
+  KnowledgeBase kb(level->getSize());
 
   // while (true) {
   //   kb.getInfo(level)
