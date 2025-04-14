@@ -35,8 +35,7 @@ private:
       throw std::runtime_error("Failed to start clasp.");
 
     int realClauseCount = assumption.empty() ? clauseCount : clauseCount + 1;
-    std::fprintf(claspIn, "p cnf %d %d\n", variableCount, realClauseCount);
-    std::fprintf(claspIn, "%s", clauses.c_str());
+    std::fprintf(claspIn, "p cnf %d %d\n%s", variableCount, realClauseCount, clauses.c_str());
     if (!assumption.empty())
       std::fprintf(claspIn, "%s", clausetoString(assumption).c_str());
 

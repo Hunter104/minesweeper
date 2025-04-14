@@ -34,8 +34,6 @@ Arguments parse_args(int argc, char *argv[]) {
       args.bombs = std::atoi(optarg);
       break;
     case 'h':
-      std::cerr << "Usage: " << argv[0] << " [-t] [-g] [-s size] [-b bombs]\n";
-      std::exit(EXIT_SUCCESS);
     default:
       std::cerr << "Usage: " << argv[0] << " [-t] [-g] [-s size] [-b bombs]\n";
       std::exit(EXIT_FAILURE);
@@ -48,7 +46,8 @@ Arguments parse_args(int argc, char *argv[]) {
 void testSolver() {
   Solver s;
   s.addVariable();
-  s.addClause({1, -1});
+  s.addClause({1});
+  s.addClause({-1});
 
   if (s.solve())
     std::cout << "satisfiable\n";
