@@ -7,6 +7,7 @@
 #include <map>
 #include <unistd.h>
 #include <vector>
+#include "level.cpp"
 
 // Função geradora de combinações
 void generateCombinations(const std::vector<int> &variables, int r,
@@ -100,6 +101,19 @@ public:
       solver.addClause(negatedCombination);
     }
   }
+
+  void feedNewInfo(Level& level) {
+    const std::vector<std::pair<Vector2, int>> &openCells = level.getOpenCells();
+    for (auto& cell : openCells) {
+      if (cell.second == 0) continue;
+      std::vector<int> variables;
+      for (auto& adjacent : level.getUnkownAdjacent(cell.first)) {
+        variables.push_back(hasBombVariables[adjacent]);
+      }
+      generateClauses(variables, cell.second);
+    }
+  }
+
 };
 
 // Testa funcao que gera clausulas
