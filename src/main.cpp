@@ -67,7 +67,6 @@ int main(int argc, char *argv[]) {
 
 
   KnowledgeBase kb(level->getSize());
-
   kb.feedNewInfo(level);
   if (args.test) {
     while (true) {
@@ -81,6 +80,7 @@ int main(int argc, char *argv[]) {
         continue;
       }
 
+      std::cout << kb;
       if (kb.checkBomb(pos)) {
         std::cout << "There is a bomb there.\n";
         level->mark(pos);

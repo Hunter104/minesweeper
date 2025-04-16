@@ -1,4 +1,5 @@
 #pragma once
+#include <algorithm>
 #include <cstdlib>
 #include <cstring>
 #include <ctime>
@@ -19,12 +20,17 @@ protected:
   int size;
   std::optional<int> bombCount;
   std::vector<std::pair<Vector2, int>> openCells;
+  std::vector<Vector2> markedCells; // NEW: track marked positions
 
   inline bool isOutOfBounds(Vector2 pos) {
     return pos.x < 0 || pos.y < 0 || pos.x >= size || pos.y >= size;
   }
 
   void setCell(Vector2 pos, int value) { openCells.emplace_back(pos, value); }
+
+  bool isMarked(Vector2 pos) const { // NEW: check if cell is marked
+    return std::find(markedCells.begin(), markedCells.end(), pos) != markedCells.end();
+  }
 
 public:
   virtual bool update() = 0;
@@ -59,10 +65,14 @@ public:
     for (int i = 0; i < level.size; i++) {
       std::cout << i << " ";
       for (int j = 0; j < level.size; j++) {
-        int tile = level.getCell({i, j});
-        if (tile == TILE_UNKOWN)
-          os << "# ";
-        else if (tile == 0)
+        Vector2 pos = {i, j};
+        int tile = level.getCell(pos);
+        if (tile == TILE_UNKOWN) {
+          if (level.isMarked(pos))
+            os << "📍";
+          else
+            os << "# ";
+        } else if (tile == 0)
           os << ". ";
         else
           os << tile << ' ';
@@ -105,6 +115,7 @@ public:
   }
 
   void mark(Vector2 pos) override {
+    markedCells.push_back(pos); // NEW: mark it
     queuedActions.emplace_back(pos, Action::MARK);
   }
 
@@ -113,7 +124,6 @@ public:
   }
 
   bool update() override {
-    // Print out current actions
     int actionCount = queuedActions.size();
     std::cout << actionCount << '\n';
     if (actionCount == 0)
@@ -129,7 +139,6 @@ public:
     }
     queuedActions.clear();
 
-    // Receive next board state
     int openCellsCount;
     std::cin >> openCellsCount;
     for (int i = 0; i < openCellsCount; i++) {
@@ -148,7 +157,6 @@ public:
 
 class GeneratedLevel : public ILevel {
 private:
-  // Number of bombs around tile, if negative there is a bomb in the tile
   Matrix2D<int> playingField;
   Matrix2D<char> discovered;
 
@@ -183,7 +191,7 @@ public:
     int placed = 0;
     while (placed < bombCount) {
       Vector2 pos = Vector2::getRandom(size, size);
-      if (pos == initial_probe || playingField[pos] == -1)
+      if (pos == initial_probe || playingField[pos] < -1)
         continue;
 
       playingField[pos] = -50;
@@ -203,7 +211,10 @@ public:
     return true;
   }
 
-  void mark(Vector2 pos) override { std::cout << "Marked: " << pos << '\n'; }
+  void mark(Vector2 pos) override {
+    markedCells.push_back(pos); // NEW: track marked pos
+    std::cout << "Marked: " << pos << '\n';
+  }
 
   void probe(Vector2 pos) override {
     if (playingField[pos] < 0) {

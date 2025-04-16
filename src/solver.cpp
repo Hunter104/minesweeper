@@ -41,6 +41,7 @@ private:
     if (!assumption.empty())
       std::fprintf(claspIn, "%s", clausetoString(assumption).c_str());
 
+    fflush(claspIn);
     const int status = pclose(claspIn);
     if (!WIFEXITED(status)) {
       throw std::runtime_error("Clasp failed to execute with status code: " +
@@ -76,6 +77,8 @@ public:
   }
 
   void addClause(const std::vector<int> &clause) {
+    if (clause.empty())
+      throw std::logic_error("Trying to insert empty clause, empty clauses are unsatisfiable.");
     clauseCount++;
     clauses += clausetoString(clause);
   }

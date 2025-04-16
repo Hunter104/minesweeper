@@ -6,6 +6,7 @@
 #include <cstdio>
 #include <cstdlib>
 #include <map>
+#include <stdexcept>
 #include <unistd.h>
 #include <vector>
 
@@ -62,6 +63,8 @@ public:
 
   void generateClauses(const std::vector<int> &variables, int k) {
     int n = variables.size();
+    if (n < k)
+      throw std::logic_error("More bombs than spaces.");
 
     // Caso especial k=0
     if (k == 0) {
@@ -113,6 +116,8 @@ public:
       for (auto &adjacent : level->getUnkownAdjacent(cell.first)) {
         variables.push_back(hasBombVariables[adjacent]);
       }
+      if (variables.empty() && cell.second > 0)
+        throw std::logic_error("Cannot generate clauses with bombs and no spaces");
       generateClauses(variables, cell.second);
     }
   }
