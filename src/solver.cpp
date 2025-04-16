@@ -36,7 +36,8 @@ private:
       throw std::runtime_error("Failed to start clasp.");
 
     int realClauseCount = assumption.empty() ? clauseCount : clauseCount + 1;
-    std::fprintf(claspIn, "p cnf %d %d\n%s", variableCount, realClauseCount, clauses.c_str());
+    std::fprintf(claspIn, "p cnf %d %d\n%s", variableCount, realClauseCount,
+                 clauses.c_str());
     if (!assumption.empty())
       std::fprintf(claspIn, "%s", clausetoString(assumption).c_str());
 
@@ -50,8 +51,9 @@ private:
       return false;
     else if (WEXITSTATUS(status) == 10)
       return true;
-    else 
-      throw std::runtime_error("Clasp failed with status code: " + std::to_string(WEXITSTATUS(status)));
+    else
+      throw std::runtime_error("Clasp failed with status code: " +
+                               std::to_string(WEXITSTATUS(status)));
   }
 
 public:
@@ -63,10 +65,12 @@ public:
   // Clasp starts indexing from 1
   inline int addVariable() { return ++variableCount; }
 
-  template<typename... Ints,
-    std::enable_if_t<(std::is_convertible_v<Ints, int> && ...), int> = 0>
+  template <
+      typename... Ints,
+      std::enable_if_t<(std::is_convertible_v<Ints, int> && ...), int> = 0>
   void addClause(Ints... ints) {
-    static_assert((std::is_convertible_v<Ints, int> && ...), "All arguments must be convertible to int");
+    static_assert((std::is_convertible_v<Ints, int> && ...),
+                  "All arguments must be convertible to int");
     std::vector<int> clause = {static_cast<int>(ints)...};
     addClause(clause);
   }
@@ -85,10 +89,12 @@ public:
     return isSatisfiable(assumption);
   }
 
-  template<typename... Ints,
-    std::enable_if_t<(std::is_convertible_v<Ints, int> && ...), int> = 0>
+  template <
+      typename... Ints,
+      std::enable_if_t<(std::is_convertible_v<Ints, int> && ...), int> = 0>
   bool solve(Ints... ints) {
-    static_assert((std::is_convertible_v<Ints, int> && ...), "All arguments must be convertible to int");
+    static_assert((std::is_convertible_v<Ints, int> && ...),
+                  "All arguments must be convertible to int");
     std::vector<int> clause = {static_cast<int>(ints)...};
     return solve(clause);
   }

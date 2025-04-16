@@ -50,9 +50,9 @@ int main(int argc, char *argv[]) {
   std::srand(static_cast<unsigned>(std::time(nullptr)));
 
   Arguments args = parse_args(argc, argv);
-  ILevel *level; 
+  ILevel *level;
 
-  if (args.generate) 
+  if (args.generate)
     level = new GeneratedLevel(args.size, args.bombs);
   else
     level = InputLevel::create();
@@ -68,19 +68,20 @@ int main(int argc, char *argv[]) {
       Vector2 pos;
       std::cout << "Query bomb position: ";
       std::cin >> pos.y >> pos.x;
-      if (pos.y < 0 || pos.x < 0 || pos.y > level->getSize() || pos.x > level->getSize()) {
+      if (pos.y < 0 || pos.x < 0 || pos.y > level->getSize() ||
+          pos.x > level->getSize()) {
         std::cerr << "Invalid position.\n";
         continue;
       }
 
       if (kb.checkBomb(pos))
         std::cout << "There is a bomb there.\n";
-      else if  (kb.checkBomb(pos, false))
+      else if (kb.checkBomb(pos, false))
         std::cout << "There isn't a bomb there.\n";
-      else 
+      else
         std::cout << "Couldn't assert if there is a bomb there.\n";
     }
   }
 
-    return EXIT_SUCCESS;
+  return EXIT_SUCCESS;
 }

@@ -24,9 +24,8 @@ protected:
     return pos.x < 0 || pos.y < 0 || pos.x >= size || pos.y >= size;
   }
 
-  void setCell(Vector2 pos, int value) {
-    openCells.emplace_back(pos, value);
-  }
+  void setCell(Vector2 pos, int value) { openCells.emplace_back(pos, value); }
+
 public:
   virtual bool update() = 0;
   virtual void mark(Vector2 pos) = 0;
@@ -39,8 +38,8 @@ public:
 
   virtual std::vector<Vector2> getUnkownAdjacent(Vector2 pos) {
     std::vector<Vector2> unkowns;
-    for (auto& direction : Vector2::AllDirections()) {
-      Vector2 newPos = pos +direction;
+    for (auto &direction : Vector2::AllDirections()) {
+      Vector2 newPos = pos + direction;
       if (!isOutOfBounds(newPos) && getCell(newPos) < 0)
         unkowns.push_back(newPos);
     }
@@ -56,7 +55,7 @@ public:
     std::cout << "  ";
     for (int i = 0; i < level.size; i++)
       std::cout << i << " ";
-    std::cout <<'\n';
+    std::cout << '\n';
     for (int i = 0; i < level.size; i++) {
       std::cout << i << " ";
       for (int j = 0; j < level.size; j++) {
@@ -81,12 +80,9 @@ private:
   enum class Action { PROBE, MARK };
   std::vector<std::pair<Vector2, Action>> queuedActions;
 
-  void setCell(Vector2 pos, int value) {
-    openCells.emplace_back(pos, value);
-  }
+  void setCell(Vector2 pos, int value) { openCells.emplace_back(pos, value); }
 
-  InputLevel(int size, int bombs)
-      : playingField(size, size, TILE_UNKOWN) {
+  InputLevel(int size, int bombs) : playingField(size, size, TILE_UNKOWN) {
     this->size = size;
     this->bombCount = bombs < 0 ? std::nullopt : std::make_optional(bombs);
   }
@@ -165,8 +161,7 @@ private:
     else if (playingField[pos] > 0) {
       discovered[pos] = true;
       openCells.emplace_back(pos, playingField[pos]);
-    }
-    else if (playingField[pos] == 0 && !discovered[pos]) {
+    } else if (playingField[pos] == 0 && !discovered[pos]) {
       openCells.emplace_back(pos, playingField[pos]);
       discovered[pos] = true;
       for (auto &direction : Vector2::AllDirections()) {

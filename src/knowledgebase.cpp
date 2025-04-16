@@ -1,4 +1,5 @@
 #pragma once
+#include "level.cpp"
 #include "matrix2d.cpp"
 #include "solver.cpp"
 #include "vector2.cpp"
@@ -7,7 +8,6 @@
 #include <map>
 #include <unistd.h>
 #include <vector>
-#include "level.cpp"
 
 // Função geradora de combinações
 void generateCombinations(const std::vector<int> &variables, int r,
@@ -102,16 +102,16 @@ public:
     }
   }
 
-  void feedNewInfo(ILevel* level) {
-    const std::vector<std::pair<Vector2, int>> &openCells = level->getOpenCells();
-    for (auto& cell : openCells) {
+  void feedNewInfo(ILevel *level) {
+    const std::vector<std::pair<Vector2, int>> &openCells =
+        level->getOpenCells();
+    for (auto &cell : openCells) {
       solver.addClause(-hasBombVariables[cell.first]);
       std::vector<int> variables;
-      for (auto& adjacent : level->getUnkownAdjacent(cell.first)) {
+      for (auto &adjacent : level->getUnkownAdjacent(cell.first)) {
         variables.push_back(hasBombVariables[adjacent]);
       }
       generateClauses(variables, cell.second);
     }
   }
-
 };
