@@ -46,6 +46,14 @@ Arguments parse_args(int argc, char *argv[]) {
   return args;
 }
 
+void printKb(KnowledgeBase& kb) {
+  std::cout << kb;
+}
+
+void printLevel(ILevel* level) {
+  std::cout << *level;
+}
+
 int main(int argc, char *argv[]) {
   std::srand(static_cast<unsigned>(std::time(nullptr)));
 
@@ -57,14 +65,13 @@ int main(int argc, char *argv[]) {
   else
     level = InputLevel::create();
 
-  if (args.test)
-    std::cout << *level;
 
   KnowledgeBase kb(level->getSize());
 
   kb.feedNewInfo(level);
   if (args.test) {
     while (true) {
+      std::cout << *level;
       Vector2 pos;
       std::cout << "Query bomb position: ";
       std::cin >> pos.y >> pos.x;
@@ -74,12 +81,19 @@ int main(int argc, char *argv[]) {
         continue;
       }
 
-      if (kb.checkBomb(pos))
+      if (kb.checkBomb(pos)) {
         std::cout << "There is a bomb there.\n";
-      else if (kb.checkBomb(pos, false))
+        level->mark(pos);
+      }
+      else if (kb.checkBomb(pos, false)) {
         std::cout << "There isn't a bomb there.\n";
-      else
+        level->probe(pos);
+      }
+      else {
         std::cout << "Couldn't assert if there is a bomb there.\n";
+      }
+
+      level->update();
     }
   }
 

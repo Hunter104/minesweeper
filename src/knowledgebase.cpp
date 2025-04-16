@@ -107,6 +107,8 @@ public:
         level->getOpenCells();
     for (auto &cell : openCells) {
       solver.addClause(-hasBombVariables[cell.first]);
+      if (cell.second == 0)
+        continue;
       std::vector<int> variables;
       for (auto &adjacent : level->getUnkownAdjacent(cell.first)) {
         variables.push_back(hasBombVariables[adjacent]);

@@ -7,9 +7,9 @@
 #include <type_traits>
 #include <vector>
 #ifdef DEBUG
-constexpr char command[] = "clasp -";
+constexpr char command[] = "minisat";
 #else
-constexpr char command[] = "clasp - > /dev/null";
+constexpr char command[] = "minisat > /dev/null";
 #endif
 
 constexpr int UNSAT = 20;
@@ -58,7 +58,7 @@ private:
 
 public:
   Solver() {
-    if (system("which clasp > /dev/null 2>&1"))
+    if (system("which minisat > /dev/null 2>&1"))
       throw std::runtime_error("Clasp not found");
   }
 
