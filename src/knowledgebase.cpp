@@ -102,12 +102,12 @@ public:
     }
   }
 
-  void feedNewInfo(Level& level) {
-    const std::vector<std::pair<Vector2, int>> &openCells = level.getOpenCells();
+  void feedNewInfo(ILevel* level) {
+    const std::vector<std::pair<Vector2, int>> &openCells = level->getOpenCells();
     for (auto& cell : openCells) {
       if (cell.second == 0) continue;
       std::vector<int> variables;
-      for (auto& adjacent : level.getUnkownAdjacent(cell.first)) {
+      for (auto& adjacent : level->getUnkownAdjacent(cell.first)) {
         variables.push_back(hasBombVariables[adjacent]);
       }
       generateClauses(variables, cell.second);

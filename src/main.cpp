@@ -64,12 +64,17 @@ int main(int argc, char *argv[]) {
   std::srand(static_cast<unsigned>(std::time(nullptr)));
 
   Arguments args = parse_args(argc, argv);
-  Level level = Level::create(std::cin, std::cout);
+  ILevel *level; 
+
+  if (args.generate) 
+    level = new GeneratedLevel(args.size, args.bombs);
+  else
+    level = InputLevel::create();
 
   if (args.test)
-    std::cout << level;
+    std::cout << *level;
 
-  KnowledgeBase kb(level.getSize());
+  KnowledgeBase kb(level->getSize());
 
   kb.feedNewInfo(level);
   if (args.test)
