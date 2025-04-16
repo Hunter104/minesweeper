@@ -179,7 +179,6 @@ public:
     this->bombCount = bombCount;
 
     Vector2 initial_probe = Vector2::getRandom(size, size);
-    openCells.emplace_back(initial_probe, playingField[initial_probe]);
 
     int placed = 0;
     while (placed < bombCount) {
@@ -187,7 +186,7 @@ public:
       if (pos == initial_probe || playingField[pos] == -1)
         continue;
 
-      playingField[pos] = -20;
+      playingField[pos] = -50;
       placed++;
 
       for (auto &adjacent : Vector2::AllDirections()) {
