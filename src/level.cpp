@@ -53,7 +53,12 @@ public:
   }
 
   friend std::ostream &operator<<(std::ostream &os, const ILevel &level) {
+    std::cout << "  ";
+    for (int i = 0; i < level.size; i++)
+      std::cout << i << " ";
+    std::cout <<'\n';
     for (int i = 0; i < level.size; i++) {
+      std::cout << i << " ";
       for (int j = 0; j < level.size; j++) {
         int tile = level.getCell({i, j});
         if (tile == TILE_UNKOWN)
