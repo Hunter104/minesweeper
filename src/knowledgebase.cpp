@@ -49,9 +49,9 @@ public:
     int var = hasBombVariables[tile];
     var = exists ? var : -var;
 
-    if (solver.solve({-var}))
+    if (solver.solve(-var))
       return false;
-    solver.addClause({var});
+    solver.addClause(var);
     return true;
   }
 
@@ -66,7 +66,7 @@ public:
     // Caso especial k=0
     if (k == 0) {
       for (int var : variables) {
-        solver.addClause({-var});
+        solver.addClause(-var);
       }
       return;
     }
@@ -74,7 +74,7 @@ public:
     // Caso especial k=n
     if (k == n) {
       for (int var : variables) {
-        solver.addClause({var});
+        solver.addClause(var);
       }
       return;
     }
@@ -105,7 +105,7 @@ public:
   void feedNewInfo(ILevel* level) {
     const std::vector<std::pair<Vector2, int>> &openCells = level->getOpenCells();
     for (auto& cell : openCells) {
-      solver.addClause({-hasBombVariables[cell.first]});
+      solver.addClause(-hasBombVariables[cell.first]);
       std::vector<int> variables;
       for (auto& adjacent : level->getUnkownAdjacent(cell.first)) {
         variables.push_back(hasBombVariables[adjacent]);

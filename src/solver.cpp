@@ -62,6 +62,13 @@ public:
   // Clasp starts indexing from 1
   inline int addVariable() { return ++variableCount; }
 
+  template<typename... Ints>
+  void addClause(Ints... ints) {
+    static_assert((std::is_convertible_v<Ints, int> && ...), "All arguments must be convertible to int");
+    std::vector<int> clause = {static_cast<int>(ints)...};
+    addClause(clause);
+  }
+
   void addClause(const std::vector<int> &clause) {
     clauseCount++;
     clauses += clausetoString(clause);
@@ -74,6 +81,13 @@ public:
 
   bool solve(const std::vector<int> &assumption) const {
     return isSatisfiable(assumption);
+  }
+
+  template<typename... Ints>
+  bool solve(Ints... ints) {
+    static_assert((std::is_convertible_v<Ints, int> && ...), "All arguments must be convertible to int");
+    std::vector<int> clause = {static_cast<int>(ints)...};
+    return solve(clause);
   }
 
   friend std::ostream &operator<<(std::ostream &os, const Solver &s) {
