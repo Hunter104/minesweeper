@@ -33,6 +33,6 @@ debug: all
 
 run: $(BUILD_DIR)/$(EXECUTABLE)
 	@echo "Running with file $(TEST_FILE)"
-	./$(BUILD_DIR)/$(EXECUTABLE) < $(TEST_FILE)
+	./$(BUILD_DIR)/$(EXECUTABLE)
 
 .PHONY: all clean debug
