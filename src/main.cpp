@@ -6,8 +6,11 @@
 #include <cstdlib>
 #include <cstring>
 #include <ctime>
+#include <iostream>
 #include <unistd.h>
 
+// Optimizations:
+// Fix passing arguments passing by value everywhere
 struct Arguments {
   bool test = false;
   bool generate = false;
@@ -61,32 +64,21 @@ int main(int argc, char *argv[]) {
   std::srand(static_cast<unsigned>(std::time(nullptr)));
 
   Arguments args = parse_args(argc, argv);
-  if (args.test) {
-    testGenerateClauses();
-    testSolver();
-    return EXIT_SUCCESS;
-  }
+  ILevel *level; 
 
-  ILevel *level = nullptr;
-  if (args.generate)
+  if (args.generate) 
     level = new GeneratedLevel(args.size, args.bombs);
   else
-    level = InputLevel::create(std::cin, std::cout);
+    level = InputLevel::create();
+
+  if (args.test)
+    std::cout << *level;
 
   KnowledgeBase kb(level->getSize());
 
-  // while (true) {
-  //   kb.getInfo(level)
-  //   vector<Vector2, Action> actions = kb.query(level)
-  //   for (auto& action : results)
-  //     if (action.second == mark)
-  //      level.mark(action.first)
-  //     else
-  //      level.probe(action.second)
-  //   if (! level.update())
-  //    break;
-  // }
+  kb.feedNewInfo(level);
+  if (args.test)
+    std::cout << kb;
 
-  delete level;
   return EXIT_SUCCESS;
 }
