@@ -46,20 +46,6 @@ Arguments parse_args(int argc, char *argv[]) {
   return args;
 }
 
-void testSolver() {
-  Solver s;
-  s.addVariable();
-  s.addClause({1});
-  s.addClause({-1});
-
-  if (s.solve())
-    std::cout << "satisfiable\n";
-  else 
-    std::cout << "unsatisfiable\n";
-
-  std::cout << s;
-}
-
 int main(int argc, char *argv[]) {
   std::srand(static_cast<unsigned>(std::time(nullptr)));
 

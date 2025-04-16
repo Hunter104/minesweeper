@@ -115,12 +115,3 @@ public:
   }
 
 };
-
-// Testa funcao que gera clausulas
-void testGenerateClauses() {
-  KnowledgeBase kb(5);
-  std::vector<int> variables = {1, 2, 3, 4, 5, 6, 7, 8};
-  int k = 4;
-  kb.generateClauses(variables, k);
-  std::cout << kb;
-}
