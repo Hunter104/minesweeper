@@ -4,6 +4,7 @@
 #include <ostream>
 #include <stdexcept>
 #include <string>
+#include <type_traits>
 #include <vector>
 #ifdef DEBUG
 constexpr char command[] = "clasp -";
@@ -62,7 +63,8 @@ public:
   // Clasp starts indexing from 1
   inline int addVariable() { return ++variableCount; }
 
-  template<typename... Ints>
+  template<typename... Ints,
+    std::enable_if_t<(std::is_convertible_v<Ints, int> && ...), int> = 0>
   void addClause(Ints... ints) {
     static_assert((std::is_convertible_v<Ints, int> && ...), "All arguments must be convertible to int");
     std::vector<int> clause = {static_cast<int>(ints)...};
@@ -83,7 +85,8 @@ public:
     return isSatisfiable(assumption);
   }
 
-  template<typename... Ints>
+  template<typename... Ints,
+    std::enable_if_t<(std::is_convertible_v<Ints, int> && ...), int> = 0>
   bool solve(Ints... ints) {
     static_assert((std::is_convertible_v<Ints, int> && ...), "All arguments must be convertible to int");
     std::vector<int> clause = {static_cast<int>(ints)...};
