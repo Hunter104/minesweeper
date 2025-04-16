@@ -15,7 +15,7 @@ struct Arguments {
   bool test = false;
   bool generate = false;
   int size = 10;
-  int bombs = 20;
+  int bombs = 15;
 };
 
 Arguments parse_args(int argc, char *argv[]) {
@@ -63,8 +63,24 @@ int main(int argc, char *argv[]) {
   KnowledgeBase kb(level->getSize());
 
   kb.feedNewInfo(level);
-  if (args.test)
-    std::cout << kb;
+  if (args.test) {
+    while (true) {
+      Vector2 pos;
+      std::cout << "Query bomb position: ";
+      std::cin >> pos.y >> pos.x;
+      if (pos.y < 0 || pos.x < 0 || pos.y > level->getSize() || pos.x > level->getSize()) {
+        std::cerr << "Invalid position.\n";
+        continue;
+      }
 
-  return EXIT_SUCCESS;
+      if (kb.checkBomb(pos))
+        std::cout << "There is a bomb there.\n";
+      else if  (kb.checkBomb(pos, false))
+        std::cout << "There isn't a bomb there.\n";
+      else 
+        std::cout << "Couldn't assert if there is a bomb there.\n";
+    }
+  }
+
+    return EXIT_SUCCESS;
 }
