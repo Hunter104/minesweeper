@@ -20,16 +20,14 @@ protected:
   int size;
   std::optional<int> bombCount;
   std::vector<std::pair<Vector2, int>> openCells;
-  std::vector<Vector2> markedCells; // NEW: track marked positions
+  std::vector<Vector2> markedCells;
 
-  inline bool isOutOfBounds(Vector2 pos) {
+  inline bool isOutOfBounds(Vector2 pos) const {
     return pos.x < 0 || pos.y < 0 || pos.x >= size || pos.y >= size;
   }
 
-  void setCell(Vector2 pos, int value) { openCells.emplace_back(pos, value); }
-
-  bool isMarked(Vector2 pos) const { // NEW: check if cell is marked
-    return std::find(markedCells.begin(), markedCells.end(), pos) != markedCells.end();
+  void setCell(Vector2 pos, int value) { 
+    openCells.emplace_back(pos, value); 
   }
 
 public:
@@ -39,17 +37,20 @@ public:
   virtual int getCell(Vector2 pos) const = 0;
   virtual ~ILevel() = default;
 
+  bool isMarked(Vector2 pos) const {
+    return std::find(markedCells.begin(), markedCells.end(), pos) != markedCells.end();
+  }
+
   int getSize() const { return size; }
   std::optional<int> getBombCount() const { return bombCount; }
 
-  virtual std::vector<Vector2> getUnkownAdjacent(Vector2 pos) {
+  virtual std::vector<Vector2> getUnkownAdjacent(Vector2 pos) const {
     std::vector<Vector2> unkowns;
     for (auto &direction : Vector2::AllDirections()) {
       Vector2 newPos = pos + direction;
-      if (!isOutOfBounds(newPos) && getCell(newPos) < 0)
+      if (!isOutOfBounds(newPos) && getCell(newPos) == TILE_UNKOWN && !isMarked(newPos))
         unkowns.push_back(newPos);
     }
-
     return unkowns;
   }
 
@@ -58,18 +59,18 @@ public:
   }
 
   friend std::ostream &operator<<(std::ostream &os, const ILevel &level) {
-    std::cout << "  ";
+    os << "  ";
     for (int i = 0; i < level.size; i++)
-      std::cout << i << " ";
-    std::cout << '\n';
+      os << i << " ";
+    os << '\n';
     for (int i = 0; i < level.size; i++) {
-      std::cout << i << " ";
+      os << i << " ";
       for (int j = 0; j < level.size; j++) {
         Vector2 pos = {i, j};
         int tile = level.getCell(pos);
         if (tile == TILE_UNKOWN) {
           if (level.isMarked(pos))
-            os << "📍";
+            os << "B ";
           else
             os << "# ";
         } else if (tile == 0)
@@ -81,23 +82,23 @@ public:
     }
     return os;
   }
+  int getMarkedCount() const {
+    return markedCells.size();
+}
 };
 
 class InputLevel : public ILevel {
 private:
   Matrix2D<int> playingField;
-
   enum class Action { PROBE, MARK };
   std::vector<std::pair<Vector2, Action>> queuedActions;
 
-  void setCell(Vector2 pos, int value) { openCells.emplace_back(pos, value); }
-
+public:
   InputLevel(int size, int bombs) : playingField(size, size, TILE_UNKOWN) {
     this->size = size;
     this->bombCount = bombs < 0 ? std::nullopt : std::make_optional(bombs);
   }
 
-public:
   static ILevel *create() {
     int bombs, size, openCellsCount;
     std::cin >> size >> bombs >> openCellsCount;
@@ -108,125 +109,124 @@ public:
       int num;
       std::cin >> pos.y >> pos.x >> num;
       level->setCell(pos, num);
-      level->playingField[pos] = num;
+      level->playingField.at(pos) = num;
     }
-
     return level;
   }
 
   void mark(Vector2 pos) override {
-    markedCells.push_back(pos); // NEW: mark it
-    queuedActions.emplace_back(pos, Action::MARK);
+    if (!isOutOfBounds(pos) && getCell(pos) == TILE_UNKOWN && !isMarked(pos)) {
+      markedCells.push_back(pos);
+      queuedActions.emplace_back(pos, Action::MARK);
+    }
   }
 
   void probe(Vector2 pos) override {
-    queuedActions.emplace_back(pos, Action::PROBE);
+    if (!isOutOfBounds(pos) && !isMarked(pos)) {
+      queuedActions.emplace_back(pos, Action::PROBE);
+    }
   }
 
   bool update() override {
-    int actionCount = queuedActions.size();
-    std::cout << actionCount << '\n';
-    if (actionCount == 0)
-      return false;
 
-    for (auto &action : queuedActions) {
-      std::cout << action.first.y << ' ' << action.first.x << ' ';
-      if (action.second == Action::PROBE)
-        std::cout << 'A';
-      else
-        std::cout << 'B';
-      std::cout << '\n';
+    std::cout << queuedActions.size() << '\n';
+    for (auto& action : queuedActions) {
+        std::cout << action.first.y << ' ' << action.first.x << ' '
+                 << (action.second == Action::PROBE ? 'A' : 'B') << '\n';
     }
     queuedActions.clear();
+    std::cout.flush();
 
     int openCellsCount;
     std::cin >> openCellsCount;
+    
     for (int i = 0; i < openCellsCount; i++) {
-      Vector2 pos;
-      int num;
-      std::cin >> pos.y >> pos.x >> num;
-      setCell(pos, num);
-      playingField[pos] = num;
+        Vector2 pos;
+        int num;
+        std::cin >> pos.y >> pos.x >> num;
+        setCell(pos, num);
+        playingField[pos] = num;
     }
+    
+    return openCellsCount > 0;
+}
 
-    return true;
+  int getCell(Vector2 pos) const override { 
+    return playingField.at(pos); 
   }
-
-  inline int getCell(Vector2 pos) const override { return playingField[pos]; }
 };
 
 class GeneratedLevel : public ILevel {
-private:
-  Matrix2D<int> playingField;
-  Matrix2D<char> discovered;
-
-  void revealCells(Vector2 pos) {
-    if (isOutOfBounds(pos))
-      return;
-
-    if (playingField[pos] < 0)
-      return;
-    else if (playingField[pos] > 0) {
-      discovered[pos] = true;
-      openCells.emplace_back(pos, playingField[pos]);
-    } else if (playingField[pos] == 0 && !discovered[pos]) {
-      openCells.emplace_back(pos, playingField[pos]);
-      discovered[pos] = true;
-      for (auto &direction : Vector2::AllDirections()) {
-        revealCells(direction + pos);
+  private:
+      Matrix2D<int> playingField;
+      Matrix2D<char> discovered;  // Alterado para char para evitar problemas com vector<bool>
+  
+      void revealCells(Vector2 pos) {
+          if (isOutOfBounds(pos) || discovered.at(pos)) return;
+  
+          discovered.at(pos) = 1;  // Usando 1 para true
+          openCells.emplace_back(pos, playingField.at(pos));
+  
+          if (playingField.at(pos) == 0) {
+              for (auto &direction : Vector2::AllDirections()) {
+                  revealCells(pos + direction);
+              }
+          }
       }
-    }
-  }
-
-public:
-  GeneratedLevel(int size, int bombCount)
-      : playingField(size, size, 0), discovered(size, size, 0) {
-    if (bombCount <= 0)
-      throw std::runtime_error("Bombcount must be 1 or higher");
-    this->size = size;
-    this->bombCount = bombCount;
-
-    Vector2 initial_probe = Vector2::getRandom(size, size);
-
-    int placed = 0;
-    while (placed < bombCount) {
-      Vector2 pos = Vector2::getRandom(size, size);
-      if (pos == initial_probe || playingField[pos] < -1)
-        continue;
-
-      playingField[pos] = -50;
-      placed++;
-
-      for (auto &adjacent : Vector2::AllDirections()) {
-        if (!isOutOfBounds(pos + adjacent)) {
-          playingField[pos + adjacent]++;
-        }
+  
+  public:
+      GeneratedLevel(int size, int bombCount)
+          : playingField(size, size, 0), discovered(size, size, 0) {
+          if (bombCount <= 0) throw std::runtime_error("Bombcount must be positive");
+          this->size = size;
+          this->bombCount = bombCount;
+  
+          // Colocar bombas
+          int placed = 0;
+          while (placed < bombCount) {
+              Vector2 pos = Vector2::getRandom(size, size);
+              if (playingField.at(pos) >= 0) {
+                  playingField.at(pos) = -1; // -1 representa bomba
+                  placed++;
+              }
+          }
+  
+          // Calcular números
+          for (int y = 0; y < size; y++) {
+              for (int x = 0; x < size; x++) {
+                  if (playingField.at({x,y}) >= 0) {
+                      for (auto &dir : Vector2::AllDirections()) {
+                          Vector2 adj = Vector2{x,y} + dir;
+                          if (!isOutOfBounds(adj) && playingField.at(adj) == -1) {
+                              playingField.at({x,y})++;
+                          }
+                      }
+                  }
+              }
+          }
       }
-    }
-    probe(initial_probe);
-  }
-
-  bool update() override {
-    std::cout << "Updated\n";
-    return true;
-  }
+  
 
   void mark(Vector2 pos) override {
-    markedCells.push_back(pos); // NEW: track marked pos
-    std::cout << "Marked: " << pos << '\n';
+    if (!isOutOfBounds(pos) && !discovered.at(pos)) {
+      markedCells.push_back(pos);
+    }
   }
 
   void probe(Vector2 pos) override {
-    if (playingField[pos] < 0) {
-      std::ostringstream text;
-      text << "Position " << pos << " has a bomb.";
-      throw std::runtime_error(text.str());
+    if (isOutOfBounds(pos)) return;
+    
+    if (playingField.at(pos) == -1) {
+      throw std::runtime_error("Bomba encontrada em " + std::to_string(pos.x) + "," + std::to_string(pos.y));
     }
-
     revealCells(pos);
   }
 
+  bool update() override {
+    return true;
+  }
+
   int getCell(Vector2 pos) const override {
-    return discovered[pos] ? playingField[pos] : TILE_UNKOWN;
+    return discovered.at(pos) ? playingField.at(pos) : TILE_UNKOWN;
   }
 };
