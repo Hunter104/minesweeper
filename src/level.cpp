@@ -19,14 +19,14 @@ class ILevel {
 protected:
   int size;
   std::optional<int> bombCount;
-  std::vector<std::pair<Vector2, int>> openCells;
+  std::vector<std::pair<Vector2, int>> newOpenCells;
   std::vector<Vector2> markedCells; // NEW: track marked positions
 
   inline bool isOutOfBounds(Vector2 pos) {
     return pos.x < 0 || pos.y < 0 || pos.x >= size || pos.y >= size;
   }
 
-  void setCell(Vector2 pos, int value) { openCells.emplace_back(pos, value); }
+  void setCell(Vector2 pos, int value) { newOpenCells.emplace_back(pos, value); }
 
   bool isMarked(Vector2 pos) const { // NEW: check if cell is marked
     return std::find(markedCells.begin(), markedCells.end(), pos) != markedCells.end();
@@ -53,8 +53,9 @@ public:
     return unkowns;
   }
 
-  const std::vector<std::pair<Vector2, int>> &getOpenCells() const {
-    return openCells;
+  const std::vector<std::pair<Vector2, int>> getOpenCells() {
+    auto result = std::move(newOpenCells);
+    return result;
   }
 
   friend std::ostream &operator<<(std::ostream &os, const ILevel &level) {
@@ -168,9 +169,9 @@ private:
       return;
     else if (playingField[pos] > 0) {
       discovered[pos] = true;
-      openCells.emplace_back(pos, playingField[pos]);
+      newOpenCells.emplace_back(pos, playingField[pos]);
     } else if (playingField[pos] == 0 && !discovered[pos]) {
-      openCells.emplace_back(pos, playingField[pos]);
+      newOpenCells.emplace_back(pos, playingField[pos]);
       discovered[pos] = true;
       for (auto &direction : Vector2::AllDirections()) {
         revealCells(direction + pos);
