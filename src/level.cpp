@@ -91,7 +91,7 @@ private:
   enum class Action { PROBE, MARK };
   std::vector<std::pair<Vector2, Action>> queuedActions;
 
-  void setCell(Vector2 pos, int value) { openCells.emplace_back(pos, value); }
+  void setCell(Vector2 pos, int value) { newOpenCells.emplace_back(pos, value); }
 
   InputLevel(int size, int bombs) : playingField(size, size, TILE_UNKOWN) {
     this->size = size;
