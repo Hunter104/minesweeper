@@ -207,13 +207,11 @@ public:
   }
 
   bool update() override {
-    std::cout << "Updated\n";
     return true;
   }
 
   void mark(Vector2 pos) override {
     markedCells.push_back(pos); // NEW: track marked pos
-    std::cout << "Marked: " << pos << '\n';
   }
 
   void probe(Vector2 pos) override {

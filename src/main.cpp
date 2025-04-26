@@ -68,6 +68,8 @@ int main(int argc, char *argv[]) {
 
   Agent agent(level->getSize());
   while (true) {
+    if (args.test)
+      std::cout << *level;
     agent.decide(level);
     level->update();
   }
