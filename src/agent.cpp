@@ -26,14 +26,14 @@ void generateCombinations(const std::vector<int> &variables, int r,
 }
 
 // Negative variables are false and positive ones are true
-class KnowledgeBase {
+class Agent {
 private:
   Matrix2D<int> hasBombVariables;
   std::map<int, Vector2> inverseLookup;
   Solver solver;
 
 public:
-  KnowledgeBase(int mapSize) : hasBombVariables(mapSize, mapSize, -1) {
+  Agent(int mapSize) : hasBombVariables(mapSize, mapSize, -1) {
     for (int x = 0; x < mapSize; x++) {
       for (int y = 0; y < mapSize; y++) {
         int variable = solver.addVariable();
@@ -56,7 +56,7 @@ public:
     return true;
   }
 
-  friend std::ostream &operator<<(std::ostream &os, const KnowledgeBase &kb) {
+  friend std::ostream &operator<<(std::ostream &os, const Agent &kb) {
     os << kb.solver;
     return os;
   }
@@ -105,7 +105,8 @@ public:
     }
   }
 
-  void feedNewInfo(ILevel *level) {
+  void decide(ILevel *level) {
+    // TODO: adiciona checagem global de bombas
     const std::vector<std::pair<Vector2, int>> &openCells =
         level->getOpenCells();
     for (auto &cell : openCells) {
@@ -120,5 +121,14 @@ public:
         throw std::logic_error("Cannot generate clauses with bombs and no spaces");
       generateClauses(variables, cell.second);
     }
+    for (auto &cell : openCells) {
+      for (auto &adjacent : level->getUnkownAdjacent(cell.first)) {
+        if (checkBomb(adjacent))
+          level->mark(adjacent);
+        else if (checkBomb(adjacent, false))
+          level->probe(adjacent);
+      }
+    }
   }
+
 };

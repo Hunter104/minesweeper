@@ -1,4 +1,4 @@
-#include "knowledgebase.cpp"
+#include "agent.cpp"
 #include "level.cpp"
 #include <argp.h>
 #include <bits/getopt_core.h>
@@ -46,7 +46,7 @@ Arguments parse_args(int argc, char *argv[]) {
   return args;
 }
 
-void printKb(KnowledgeBase& kb) {
+void printKb(Agent& kb) {
   std::cout << kb;
 }
 
@@ -66,35 +66,10 @@ int main(int argc, char *argv[]) {
     level = InputLevel::create();
 
 
-  KnowledgeBase kb(level->getSize());
-  kb.feedNewInfo(level);
-  if (args.test) {
-    while (true) {
-      std::cout << *level;
-      Vector2 pos;
-      std::cout << "Query bomb position: ";
-      std::cin >> pos.y >> pos.x;
-      if (pos.y < 0 || pos.x < 0 || pos.y > level->getSize() ||
-          pos.x > level->getSize()) {
-        std::cerr << "Invalid position.\n";
-        continue;
-      }
-
-      std::cout << kb;
-      if (kb.checkBomb(pos)) {
-        std::cout << "There is a bomb there.\n";
-        level->mark(pos);
-      }
-      else if (kb.checkBomb(pos, false)) {
-        std::cout << "There isn't a bomb there.\n";
-        level->probe(pos);
-      }
-      else {
-        std::cout << "Couldn't assert if there is a bomb there.\n";
-      }
-
-      level->update();
-    }
+  Agent agent(level->getSize());
+  while (true) {
+    agent.decide(level);
+    level->update();
   }
 
   return EXIT_SUCCESS;
