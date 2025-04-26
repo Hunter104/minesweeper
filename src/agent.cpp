@@ -107,8 +107,10 @@ public:
 
   void decide(ILevel *level) {
     // TODO: adiciona checagem global de bombas
-    const std::vector<std::pair<Vector2, int>> &openCells =
+    const std::vector<std::pair<Vector2, int>> openCells =
         level->getOpenCells();
+    if (openCells.empty())
+      throw std::runtime_error("No more new information.");
     for (auto &cell : openCells) {
       solver.addClause(-hasBombVariables[cell.first]);
       if (cell.second == 0)
