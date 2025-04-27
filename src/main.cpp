@@ -66,11 +66,13 @@ int main(int argc, char *argv[]) {
     level = InputLevel::create();
 
 
-  Agent agent(level->getSize());
+  if (args.test)
+    std::cout << *level;
+  Agent agent(level);
   while (true) {
     if (args.test)
       std::cout << *level;
-    agent.decide(level);
+    agent.decide();
     level->update();
   }
 
