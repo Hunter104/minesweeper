@@ -128,8 +128,9 @@ public:
       for (auto &adjacent : level->getUnkownAdjacent(cell.first)) {
         variables.push_back(hasBombVariables[adjacent]);
       }
-      throw std::logic_error(
-          "Cannot generate clauses with bombs and no spaces");
+      if (variables.empty() && cell.second > 0)
+        throw std::logic_error(
+            "Cannot generate clauses with bombs and no spaces");
       generateClauses(variables, cell.second);
     }
     for (auto &cell : openCells) {
