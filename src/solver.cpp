@@ -59,38 +59,33 @@ private:
     constexpr char command[] = "minisat > /dev/null";
 #endif
 
-    try {
-      ProcessPipe minisatIn(command, "w");
-      int realClauseCount = clauseCount + (assumption.empty() ? 0 : 1);
+    ProcessPipe minisatIn(command, "w");
+    int realClauseCount = clauseCount + (assumption.empty() ? 0 : 1);
 
-      std::fprintf(minisatIn, "p cnf %d %d\n%s", variableCount, realClauseCount,
-                   clauses.c_str());
+    std::fprintf(minisatIn, "p cnf %d %d\n%s", variableCount, realClauseCount,
+                 clauses.c_str());
 
-      if (!assumption.empty()) {
-        std::fputs(clauseToString(assumption).c_str(), minisatIn);
-      }
+    if (!assumption.empty()) {
+      std::fputs(clauseToString(assumption).c_str(), minisatIn);
+    }
 
-      std::fflush(minisatIn);
+    std::fflush(minisatIn);
 
-      const int status = minisatIn.close();
-      if (!WIFEXITED(status)) {
-        throw std::runtime_error(
-            "Minisat failed to execute with status code: " +
-            std::to_string(status));
-      }
+    const int status = minisatIn.close();
+    if (!WIFEXITED(status)) {
+      throw std::runtime_error("Minisat failed to execute with status code: " +
+                               std::to_string(status));
+    }
 
-      int exitCode = WEXITSTATUS(status);
+    int exitCode = WEXITSTATUS(status);
 
-      if (exitCode == static_cast<int>(SolverStatus::UNSATISFIABLE)) {
-        return false;
-      } else if (exitCode == static_cast<int>(SolverStatus::SATISFIABLE)) {
-        return true;
-      } else {
-        throw std::runtime_error("Minisat failed with unexpected exit code: " +
-                                 std::to_string(exitCode));
-      }
-    } catch (const std::exception &e) {
-      throw std::runtime_error(std::string("Solver error: ") + e.what());
+    if (exitCode == static_cast<int>(SolverStatus::UNSATISFIABLE)) {
+      return false;
+    } else if (exitCode == static_cast<int>(SolverStatus::SATISFIABLE)) {
+      return true;
+    } else {
+      throw std::runtime_error("Minisat failed with unexpected exit code: " +
+                               std::to_string(exitCode));
     }
   }
 
