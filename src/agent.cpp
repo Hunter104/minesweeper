@@ -75,7 +75,7 @@ public:
   void generateClauses(const std::vector<int> &variables, int k) {
     int n = variables.size();
     if (n < k)
-      throw std::logic_error("More bombs than spaces.");
+      throw std::logic_error("More bombs than avaliable spaces.");
 
     // Caso especial k=0
     if (k == 0) {
@@ -120,21 +120,23 @@ public:
     // TODO: adiciona checagem global de bombas
     const std::vector<std::pair<Vector2, int>> openCells =
         level->getOpenCells();
-    for (auto &cell : openCells) {
-      solver.addClause(-hasBombVariables[cell.first]);
-      if (cell.second == 0)
+    for (auto &[position, value] : openCells) {
+      solver.addClause(-hasBombVariables[position]);
+      if (value == 0)
         continue;
       std::vector<int> variables;
-      for (auto &adjacent : level->getUnkownAdjacent(cell.first)) {
+      for (auto &adjacent : level->getUnkownAdjacent(position)) {
         variables.push_back(hasBombVariables[adjacent]);
       }
-      if (variables.empty() && cell.second > 0)
+      if (variables.empty() && value > 0)
         throw std::logic_error(
-            "Cannot generate clauses with bombs and no spaces");
-      generateClauses(variables, cell.second);
+            "Contradiction: Cell " + std::to_string(position.x) + "," +
+            std::to_string(position.y) + " shows " + std::to_string(value) +
+            " bombs but has no unknown neighbors");
+      generateClauses(variables, value);
     }
-    for (auto &cell : openCells) {
-      for (auto &adjacent : level->getUnkownAdjacent(cell.first)) {
+    for (auto &[position, value] : openCells) {
+      for (auto &adjacent : level->getUnkownAdjacent(position)) {
         if (checkBomb(adjacent))
           level->mark(adjacent);
         else if (checkBomb(adjacent, false))

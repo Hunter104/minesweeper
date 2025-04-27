@@ -1,5 +1,6 @@
 #pragma once
-#include <algorithm>
+#include "matrix2d.cpp"
+#include "vector2.cpp"
 #include <cstdlib>
 #include <cstring>
 #include <ctime>
@@ -8,19 +9,21 @@
 #include <sstream>
 #include <stdexcept>
 #include <unistd.h>
+#include <unordered_set>
+#include <utility>
 #include <vector>
 
-#include "matrix2d.cpp"
-#include "vector2.cpp"
-
-constexpr int TILE_UNKOWN = -1;
+constexpr int TILE_UNKNOWN = -1;
 
 class ILevel {
 protected:
   int size;
   std::optional<int> bombCount;
   std::vector<std::pair<Vector2, int>> newOpenCells;
-  std::vector<Vector2> markedCells; // NEW: track marked positions
+  std::unordered_set<Vector2> markedCells; // NEW: track marked positions
+
+  ILevel(int s = 0, std::optional<int> bc = std::nullopt)
+      : size(s), bombCount(bc) {}
 
   inline bool isOutOfBounds(Vector2 pos) const {
     return pos.x < 0 || pos.y < 0 || pos.x >= size || pos.y >= size;
@@ -31,8 +34,7 @@ protected:
   }
 
   bool isMarked(Vector2 pos) const { // NEW: check if cell is marked
-    return std::find(markedCells.begin(), markedCells.end(), pos) !=
-           markedCells.end();
+    return markedCells.find(pos) != markedCells.end();
   }
 
 public:
@@ -69,8 +71,7 @@ public:
   }
 
   const std::vector<std::pair<Vector2, int>> getOpenCells() {
-    auto result = std::move(newOpenCells);
-    return result;
+    return std::exchange(newOpenCells, {});
   }
 
   friend std::ostream &operator<<(std::ostream &os, const ILevel &level) {
@@ -83,11 +84,8 @@ public:
       for (int j = 0; j < level.size; j++) {
         Vector2 pos = {i, j};
         int tile = level.getCell(pos);
-        if (tile == TILE_UNKOWN) {
-          if (level.isMarked(pos))
-            os << "📍";
-          else
-            os << "# ";
+        if (tile == TILE_UNKNOWN) {
+          os << (level.isMarked(pos) ? "M " : "# ");
         } else if (tile == 0)
           os << ". ";
         else
@@ -110,7 +108,7 @@ private:
     newOpenCells.emplace_back(pos, value);
   }
 
-  InputLevel(int size, int bombs) : playingField(size, size, TILE_UNKOWN) {
+  InputLevel(int size, int bombs) : playingField(size, size, TILE_UNKNOWN) {
     this->size = size;
     this->bombCount = bombs < 0 ? std::nullopt : std::make_optional(bombs);
   }
@@ -124,7 +122,7 @@ public:
     for (int i = 0; i < openCellsCount; i++) {
       Vector2 pos;
       int num;
-      std::cin >> pos.y >> pos.x >> num;
+      std::cin >> pos >> num;
       level->setCell(pos, num);
       level->playingField[pos] = num;
     }
@@ -133,7 +131,7 @@ public:
   }
 
   void mark(Vector2 pos) override {
-    markedCells.push_back(pos); // NEW: mark it
+    markedCells.insert(pos); // NEW: mark it
     queuedActions.emplace_back(pos, Action::MARK);
   }
 
@@ -162,7 +160,7 @@ public:
     for (int i = 0; i < openCellsCount; i++) {
       Vector2 pos;
       int num;
-      std::cin >> pos.y >> pos.x >> num;
+      std::cin >> pos >> num;
       setCell(pos, num);
       playingField[pos] = num;
     }
@@ -180,17 +178,12 @@ private:
   bool updated = false;
 
   void revealCells(Vector2 pos) {
-    if (isOutOfBounds(pos))
+    if (isOutOfBounds(pos) || discovered[pos] || playingField[pos] < 0)
       return;
 
-    if (playingField[pos] < 0)
-      return;
-    else if (playingField[pos] > 0) {
-      discovered[pos] = true;
-      newOpenCells.emplace_back(pos, playingField[pos]);
-    } else if (playingField[pos] == 0 && !discovered[pos]) {
-      newOpenCells.emplace_back(pos, playingField[pos]);
-      discovered[pos] = true;
+    discovered[pos] = true;
+    newOpenCells.emplace_back(pos, playingField[pos]);
+    if (playingField[pos] == 0) {
       for (auto &direction : Vector2::AllDirections()) {
         revealCells(direction + pos);
       }
@@ -199,62 +192,62 @@ private:
 
 public:
   GeneratedLevel(int size, int bombCount)
-      : playingField(size, size, 0), discovered(size, size, 0) {
+      : ILevel(size, bombCount), playingField(size, size, 0),
+        discovered(size, size, 0) {
     if (bombCount >= size * size)
       throw std::invalid_argument(
           "Bomb count higher than or equal to tile count.");
     if (bombCount <= 0)
-      throw std::runtime_error("Bombcount must be 1 or higher");
-    this->size = size;
-    this->bombCount = bombCount;
+      throw std::runtime_error("Bomb count must be 1 or higher");
 
     Vector2 initial_probe = Vector2::getRandom(size, size);
+    std::unordered_set<Vector2> bombPositions;
 
     int placed = 0;
     while (placed < bombCount) {
       Vector2 pos = Vector2::getRandom(size, size);
-      if (pos == initial_probe || playingField[pos] < -1)
+      if (pos == initial_probe || bombPositions.count(pos) > 0)
         continue;
 
       playingField[pos] = -50;
+      bombPositions.insert(pos);
       placed++;
 
-      for (auto &adjacent : Vector2::AllDirections()) {
-        if (!isOutOfBounds(pos + adjacent)) {
-          playingField[pos + adjacent]++;
+      for (const auto &adjacent : Vector2::AllDirections()) {
+        Vector2 adjPos = pos + adjacent;
+        if (!isOutOfBounds(adjPos)) {
+          playingField[adjPos]++;
         }
       }
     }
     probe(initial_probe);
   }
 
-  bool update() override { 
+  bool update() override {
     if (updated) {
       updated = false;
       return true;
     } else {
       return false;
     }
-    return true; 
+    return true;
   }
 
   void mark(Vector2 pos) override {
     updated = true;
-    markedCells.push_back(pos); 
+    markedCells.insert(pos);
   }
 
   void probe(Vector2 pos) override {
     updated = true;
-    if (playingField[pos] < 0) {
-      std::ostringstream text;
-      text << "Position " << pos << " has a bomb.";
-      throw std::runtime_error(text.str());
-    }
+    if (playingField[pos] < 0)
+      throw std::runtime_error("Position " + std::to_string(pos.x) + "," +
+                               std::to_string(pos.y) + " has a bomb.");
 
     revealCells(pos);
   }
 
   int getCell(Vector2 pos) const override {
-    return discovered[pos] ? playingField[pos] : TILE_UNKOWN;
+    return discovered[pos] ? playingField[pos] : TILE_UNKNOWN;
   }
 };

@@ -6,14 +6,8 @@
 #include <string>
 #include <type_traits>
 #include <vector>
-#ifdef DEBUG
-constexpr char command[] = "minisat";
-#else
-constexpr char command[] = "minisat > /dev/null";
-#endif
 
-constexpr int UNSAT = 20;
-
+enum class SolverStatus : int { SATISFIABLE = 10, UNSATISFIABLE = 20 };
 // Clasp wrapper, similar to minisat's solver class
 class Solver {
 private:
@@ -21,7 +15,35 @@ private:
   int clauseCount = 0;
   std::string clauses = "";
 
-  inline std::string clausetoString(const std::vector<int> &clause) const {
+  class ProcessPipe {
+  private:
+    FILE *pipe;
+
+  public:
+    explicit ProcessPipe(const char *cmd, const char *mode)
+        : pipe(popen(cmd, mode)) {
+      if (!pipe)
+        throw std::runtime_error("Failed to start minisat process");
+    }
+
+    ~ProcessPipe() {
+      if (pipe)
+        pclose(pipe);
+    }
+
+    ProcessPipe(const ProcessPipe &) = delete;
+    ProcessPipe &operator=(const ProcessPipe &) = delete;
+
+    operator FILE *() const { return pipe; }
+
+    int close() {
+      int status = pclose(pipe);
+      pipe = nullptr;
+      return status;
+    }
+  };
+
+  inline std::string clauseToString(const std::vector<int> &clause) const {
     std::string result;
     result.reserve(clause.size() * 12 + 2);
     for (int variable : clause)
@@ -31,40 +53,56 @@ private:
   }
 
   bool isSatisfiable(const std::vector<int> &assumption = {}) const {
-    FILE *claspIn = popen(command, "w");
-    if (!claspIn)
-      throw std::runtime_error("Failed to start clasp.");
+#ifdef DEBUG
+    constexpr char command[] = "minisat";
+#else
+    constexpr char command[] = "minisat > /dev/null";
+#endif
 
-    int realClauseCount = assumption.empty() ? clauseCount : clauseCount + 1;
-    std::fprintf(claspIn, "p cnf %d %d\n%s", variableCount, realClauseCount,
-                 clauses.c_str());
-    if (!assumption.empty())
-      std::fprintf(claspIn, "%s", clausetoString(assumption).c_str());
+    try {
+      ProcessPipe minisatIn(command, "w");
+      int realClauseCount = clauseCount + (assumption.empty() ? 0 : 1);
 
-    fflush(claspIn);
-    const int status = pclose(claspIn);
-    if (!WIFEXITED(status)) {
-      throw std::runtime_error("Clasp failed to execute with status code: " +
-                               std::to_string(status));
+      std::fprintf(minisatIn, "p cnf %d %d\n%s", variableCount, realClauseCount,
+                   clauses.c_str());
+
+      if (!assumption.empty()) {
+        std::fputs(clauseToString(assumption).c_str(), minisatIn);
+      }
+
+      std::fflush(minisatIn);
+
+      const int status = minisatIn.close();
+      if (!WIFEXITED(status)) {
+        throw std::runtime_error(
+            "Minisat failed to execute with status code: " +
+            std::to_string(status));
+      }
+
+      int exitCode = WEXITSTATUS(status);
+
+      if (exitCode == static_cast<int>(SolverStatus::UNSATISFIABLE)) {
+        return false;
+      } else if (exitCode == static_cast<int>(SolverStatus::SATISFIABLE)) {
+        return true;
+      } else {
+        throw std::runtime_error("Minisat failed with unexpected exit code: " +
+                                 std::to_string(exitCode));
+      }
+    } catch (const std::exception &e) {
+      throw std::runtime_error(std::string("Solver error: ") + e.what());
     }
-
-    if (WEXITSTATUS(status) == 20)
-      return false;
-    else if (WEXITSTATUS(status) == 10)
-      return true;
-    else
-      throw std::runtime_error("Clasp failed with status code: " +
-                               std::to_string(WEXITSTATUS(status)));
   }
 
 public:
   Solver() {
-    if (system("which minisat > /dev/null 2>&1"))
-      throw std::runtime_error("Clasp not found");
+    if (system("which minisat > /dev/null 2>&1") != 0)
+      throw std::runtime_error("Minisat not found");
+    clauses.reserve(1024);
   }
 
   // Clasp starts indexing from 1
-  inline int addVariable() { return ++variableCount; }
+  [[nodiscard]] int addVariable() { return ++variableCount; }
 
   template <
       typename... Ints,
@@ -81,7 +119,7 @@ public:
       throw std::logic_error(
           "Trying to insert empty clause, empty clauses are unsatisfiable.");
     clauseCount++;
-    clauses += clausetoString(clause);
+    clauses += clauseToString(clause);
   }
 
   /* True = satisfiable
