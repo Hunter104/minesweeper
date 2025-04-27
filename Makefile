@@ -23,13 +23,12 @@ $(BUILD_DIR):
 
 $(BUILD_DIR)/$(EXECUTABLE): $(MAIN_FILE) $(SRC_FILES_EXCLUDING_MAIN)
 	$(CXX) $(CXXFLAGS) $< -o $@
-	@echo "Generating single source file..."
 	$(eval TMP_MOJ := $(shell mktemp -t "MOJ.XXXXXX"))
 	./expand $(MAIN_FILE) > $(TMP_MOJ)
-	@echo "Cleaning up includes..."
 	{ grep '^#include' $(TMP_MOJ) | sort -u; grep -v '^#include' $(TMP_MOJ); } > $(BUILD_DIR)/moj.cpp
 	rm -f $(TMP_MOJ)
 	clang-format -i $(BUILD_DIR)/moj.cpp
+	$(CXX) $(CXXFLAGS) $(BUILD_DIR)/moj.cpp -o $(BUILD_DIR)/moj
 
 clean:
 	$(RM) -r $(BUILD_DIR)
