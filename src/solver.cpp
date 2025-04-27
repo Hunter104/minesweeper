@@ -78,7 +78,8 @@ public:
 
   void addClause(const std::vector<int> &clause) {
     if (clause.empty())
-      throw std::logic_error("Trying to insert empty clause, empty clauses are unsatisfiable.");
+      throw std::logic_error(
+          "Trying to insert empty clause, empty clauses are unsatisfiable.");
     clauseCount++;
     clauses += clausetoString(clause);
   }

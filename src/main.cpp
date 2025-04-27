@@ -46,13 +46,9 @@ Arguments parse_args(int argc, char *argv[]) {
   return args;
 }
 
-void printKb(Agent& kb) {
-  std::cout << kb;
-}
+void printKb(Agent &kb) { std::cout << kb; }
 
-void printLevel(ILevel* level) {
-  std::cout << *level;
-}
+void printLevel(ILevel *level) { std::cout << *level; }
 
 int main(int argc, char *argv[]) {
   std::srand(static_cast<unsigned>(std::time(nullptr)));
@@ -64,7 +60,6 @@ int main(int argc, char *argv[]) {
     level = new GeneratedLevel(args.size, args.bombs);
   else
     level = InputLevel::create();
-
 
   if (args.test)
     std::cout << *level;

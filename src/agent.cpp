@@ -35,7 +35,8 @@ private:
   std::map<int, Vector2> inverseLookup;
 
 public:
-  Agent(ILevel *level) : level(level), hasBombVariables(level->getSize(), level->getSize(), -1) {
+  Agent(ILevel *level)
+      : level(level), hasBombVariables(level->getSize(), level->getSize(), -1) {
     int mapSize = level->getSize();
     for (int x = 0; x < mapSize; x++) {
       for (int y = 0; y < mapSize; y++) {
@@ -48,7 +49,7 @@ public:
     if (level->getBombCount().has_value()) {
       // HACK: conversão pode ser ineficiente
       std::vector<int> variables;
-      for (auto unkown : level->getAllUnknowns()) 
+      for (auto unkown : level->getAllUnknowns())
         variables.push_back(hasBombVariables[unkown]);
       generateClauses(variables, level->getBombCount().value());
     }
@@ -132,7 +133,8 @@ public:
         variables.push_back(hasBombVariables[adjacent]);
       }
       if (variables.empty() && cell.second > 0)
-        throw std::logic_error("Cannot generate clauses with bombs and no spaces");
+        throw std::logic_error(
+            "Cannot generate clauses with bombs and no spaces");
       generateClauses(variables, cell.second);
     }
     for (auto &cell : openCells) {
@@ -144,5 +146,4 @@ public:
       }
     }
   }
-
 };

@@ -1,0 +1,32 @@
+#!/usr/bin/python
+
+import re
+import sys 
+
+def read_content(path):
+    with open(path, 'r') as f:
+        return f.read()
+
+def expand_include(file):
+    return _expand_include(file, [])
+
+def _expand_include(file, visited):
+    main_content = read_content(file)
+    output = ''
+    last_pos = 0
+    for match in re.finditer(r'^#include "(.*\.cpp)"', main_content, re.MULTILINE):
+        included = match.group(1)
+        output += main_content[last_pos:match.start()]
+        if included not in visited:
+            visited.append(included)
+            output += _expand_include(included, visited)
+        else:
+            output += f'// Skipped file {included}\n'
+        last_pos = match.end()
+    output += main_content[last_pos:]  # <=== moved here
+    return output
+
+if __name__ == "__main__":
+    file = sys.argv[1]
+    expanded = expand_include(file)
+    print(expanded.replace("#pragma once", ""))

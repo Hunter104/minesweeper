@@ -26,10 +26,13 @@ protected:
     return pos.x < 0 || pos.y < 0 || pos.x >= size || pos.y >= size;
   }
 
-  void setCell(Vector2 pos, int value) { newOpenCells.emplace_back(pos, value); }
+  void setCell(Vector2 pos, int value) {
+    newOpenCells.emplace_back(pos, value);
+  }
 
   bool isMarked(Vector2 pos) const { // NEW: check if cell is marked
-    return std::find(markedCells.begin(), markedCells.end(), pos) != markedCells.end();
+    return std::find(markedCells.begin(), markedCells.end(), pos) !=
+           markedCells.end();
   }
 
 public:
@@ -55,8 +58,8 @@ public:
 
   std::vector<Vector2> getAllUnknowns() const {
     std::vector<Vector2> unkowns;
-    for (int i=0; i<size; i++) {
-      for (int j=0; j<size; j++) {
+    for (int i = 0; i < size; i++) {
+      for (int j = 0; j < size; j++) {
         if (getCell({i, j}) < 0)
           unkowns.emplace_back(i, j);
       }
@@ -103,7 +106,9 @@ private:
   enum class Action { PROBE, MARK };
   std::vector<std::pair<Vector2, Action>> queuedActions;
 
-  void setCell(Vector2 pos, int value) { newOpenCells.emplace_back(pos, value); }
+  void setCell(Vector2 pos, int value) {
+    newOpenCells.emplace_back(pos, value);
+  }
 
   InputLevel(int size, int bombs) : playingField(size, size, TILE_UNKOWN) {
     this->size = size;
@@ -194,8 +199,9 @@ private:
 public:
   GeneratedLevel(int size, int bombCount)
       : playingField(size, size, 0), discovered(size, size, 0) {
-    if (bombCount >= size*size)
-      throw std::invalid_argument("Bomb count higher than or equal to tile count.");
+    if (bombCount >= size * size)
+      throw std::invalid_argument(
+          "Bomb count higher than or equal to tile count.");
     if (bombCount <= 0)
       throw std::runtime_error("Bombcount must be 1 or higher");
     this->size = size;
@@ -221,9 +227,7 @@ public:
     probe(initial_probe);
   }
 
-  bool update() override {
-    return true;
-  }
+  bool update() override { return true; }
 
   void mark(Vector2 pos) override {
     markedCells.push_back(pos); // NEW: track marked pos
