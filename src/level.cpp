@@ -194,6 +194,8 @@ private:
 public:
   GeneratedLevel(int size, int bombCount)
       : playingField(size, size, 0), discovered(size, size, 0) {
+    if (bombCount >= size*size)
+      throw std::invalid_argument("Bomb count higher than or equal to tile count.");
     if (bombCount <= 0)
       throw std::runtime_error("Bombcount must be 1 or higher");
     this->size = size;
