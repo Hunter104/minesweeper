@@ -120,6 +120,7 @@ public:
     // TODO: adiciona checagem global de bombas
     const std::vector<std::pair<Vector2, int>> openCells =
         level->getOpenCells();
+    // HACK: não é para usar exceção aqui
     if (openCells.empty())
       throw std::runtime_error("No more new information.");
     for (auto &cell : openCells) {
