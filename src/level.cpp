@@ -22,7 +22,7 @@ protected:
   std::vector<std::pair<Vector2, int>> newOpenCells;
   std::vector<Vector2> markedCells; // NEW: track marked positions
 
-  inline bool isOutOfBounds(Vector2 pos) {
+  inline bool isOutOfBounds(Vector2 pos) const {
     return pos.x < 0 || pos.y < 0 || pos.x >= size || pos.y >= size;
   }
 
@@ -42,12 +42,24 @@ public:
   int getSize() const { return size; }
   std::optional<int> getBombCount() const { return bombCount; }
 
-  virtual std::vector<Vector2> getUnkownAdjacent(Vector2 pos) {
+  std::vector<Vector2> getUnkownAdjacent(Vector2 pos) const {
     std::vector<Vector2> unkowns;
     for (auto &direction : Vector2::AllDirections()) {
       Vector2 newPos = pos + direction;
       if (!isOutOfBounds(newPos) && getCell(newPos) < 0)
         unkowns.push_back(newPos);
+    }
+
+    return unkowns;
+  }
+
+  std::vector<Vector2> getAllUnknowns() const {
+    std::vector<Vector2> unkowns;
+    for (int i=0; i<size; i++) {
+      for (int j=0; j<size; j++) {
+        if (getCell({i, j}) < 0)
+          unkowns.emplace_back(i, j);
+      }
     }
 
     return unkowns;

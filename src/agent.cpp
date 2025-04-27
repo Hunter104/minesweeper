@@ -6,6 +6,7 @@
 #include <cstdio>
 #include <cstdlib>
 #include <map>
+#include <optional>
 #include <stdexcept>
 #include <unistd.h>
 #include <vector>
@@ -33,13 +34,22 @@ private:
   Solver solver;
 
 public:
-  Agent(int mapSize) : hasBombVariables(mapSize, mapSize, -1) {
+  Agent(const ILevel *level) : hasBombVariables(level->getSize(), level->getSize(), -1) {
+    int mapSize = level->getSize();
     for (int x = 0; x < mapSize; x++) {
       for (int y = 0; y < mapSize; y++) {
         int variable = solver.addVariable();
         hasBombVariables[x][y] = variable;
         inverseLookup[variable - 1] = {x, y};
       }
+    }
+
+    if (level->getBombCount().has_value()) {
+      // HACK: conversão pode ser ineficiente
+      std::vector<int> variables;
+      for (auto unkown : level->getAllUnknowns()) 
+        variables.push_back(hasBombVariables[unkown]);
+      generateClauses(variables, level->getBombCount().value());
     }
   }
 
