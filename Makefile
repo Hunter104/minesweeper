@@ -24,6 +24,8 @@ $(BUILD_DIR):
 
 $(BUILD_DIR)/$(EXECUTABLE): $(MAIN_FILE) $(SRC_FILES_EXCLUDING_MAIN)
 	$(CXX) $(CXXFLAGS) $< -o $@
+	@echo "Generating single source file..."
+	./expand $(MAIN_FILE) > $(BUILD_DIR)/moj.cpp
 
 clean:
 	$(RM) -r $(BUILD_DIR)
