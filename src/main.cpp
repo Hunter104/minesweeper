@@ -61,15 +61,15 @@ int main(int argc, char *argv[]) {
   else
     level = InputLevel::create();
 
-  if (args.test)
-    // TODO: Adicionar limite de 10 segundos por mapa
-    std::cout << *level;
+  int step = 1;
   Agent agent(level);
   while (true) {
     if (args.test)
-      std::cout << *level;
+      std::cout << "step: " << step << '\n' << *level;
     agent.decide();
-    level->update();
+    if (!level->update())
+      break;
+    step++;
   }
 
   return EXIT_SUCCESS;

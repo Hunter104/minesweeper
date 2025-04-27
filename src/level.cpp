@@ -177,6 +177,7 @@ class GeneratedLevel : public ILevel {
 private:
   Matrix2D<int> playingField;
   Matrix2D<char> discovered;
+  bool updated = false;
 
   void revealCells(Vector2 pos) {
     if (isOutOfBounds(pos))
@@ -227,13 +228,23 @@ public:
     probe(initial_probe);
   }
 
-  bool update() override { return true; }
+  bool update() override { 
+    if (updated) {
+      updated = false;
+      return true;
+    } else {
+      return false;
+    }
+    return true; 
+  }
 
   void mark(Vector2 pos) override {
-    markedCells.push_back(pos); // NEW: track marked pos
+    updated = true;
+    markedCells.push_back(pos); 
   }
 
   void probe(Vector2 pos) override {
+    updated = true;
     if (playingField[pos] < 0) {
       std::ostringstream text;
       text << "Position " << pos << " has a bomb.";
