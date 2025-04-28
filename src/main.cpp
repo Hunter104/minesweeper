@@ -51,10 +51,10 @@ void printKb(Agent &kb) { std::cout << kb; }
 
 void printLevel(ILevel *level) { std::cout << *level; }
 
+volatile std::sig_atomic_t timeout_flag = false;
 void timeout_handler(int sig) {
   (void)sig;
-  std::cerr << "Timeout reached. Exiting..." << std::endl;
-  exit(1);
+  timeout_flag = true;
 }
 
 int main(int argc, char *argv[]) {
@@ -64,7 +64,7 @@ int main(int argc, char *argv[]) {
 
   std::signal(SIGALRM, timeout_handler);
 
-  alarm(9);
+  alarm(8);
   ILevel *level;
 
   if (args.generate)
@@ -75,6 +75,13 @@ int main(int argc, char *argv[]) {
   int step = 1;
   Agent agent(level);
   while (true) {
+
+    if (timeout_flag) {
+      std::cout << "0";
+      delete level;
+      return 0;
+    }
+
     if (args.test)
       std::cout << "step: " << step << '\n' << *level;
     agent.decide();
