@@ -141,9 +141,9 @@ public:
 
   bool update() override {
     int actionCount = queuedActions.size();
-    std::cout << actionCount << '\n';
     if (actionCount == 0)
       return false;
+    std::cout << actionCount << '\n';
 
     for (auto &action : queuedActions) {
       std::cout << action.first.y << ' ' << action.first.x << ' ';
