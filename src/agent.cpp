@@ -45,13 +45,13 @@ public:
       }
     }
 
-    // if (level->getBombCount().has_value()) {
-    //   // HACK: conversão pode ser ineficiente
-    //   std::vector<int> variables;
-    //   for (auto unkown : level->getAllUnknowns())
-    //     variables.push_back(hasBombVariables[unkown]);
-    //   generateClauses(variables, level->getBombCount().value());
-    // }
+    if (level->getBombCount().has_value()) {
+      // HACK: conversão pode ser ineficiente
+      std::vector<int> variables;
+      for (auto unkown : level->getAllUnknowns())
+        variables.push_back(hasBombVariables[unkown]);
+      generateClauses(variables, level->getBombCount().value());
+    }
   }
 
   /* Query bomb existence in tile,
@@ -117,7 +117,6 @@ public:
   }
 
   void decide() {
-    // TODO: adiciona checagem global de bombas
     const std::vector<std::pair<Vector2, int>> openCells =
         level->getOpenCells();
     for (auto &[position, value] : openCells) {
