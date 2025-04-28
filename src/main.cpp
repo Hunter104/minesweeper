@@ -3,6 +3,7 @@
 #include <argp.h>
 #include <bits/getopt_core.h>
 #include <cerrno>
+#include <csignal>
 #include <cstdlib>
 #include <cstring>
 #include <ctime>
@@ -50,10 +51,20 @@ void printKb(Agent &kb) { std::cout << kb; }
 
 void printLevel(ILevel *level) { std::cout << *level; }
 
+void timeout_handler(int sig) {
+  (void)sig;
+  std::cerr << "Timeout reached. Exiting..." << std::endl;
+  exit(1);
+}
+
 int main(int argc, char *argv[]) {
   std::srand(static_cast<unsigned>(std::time(nullptr)));
 
   Arguments args = parse_args(argc, argv);
+
+  std::signal(SIGALRM, timeout_handler);
+
+  alarm(9);
   ILevel *level;
 
   if (args.generate)
@@ -72,5 +83,6 @@ int main(int argc, char *argv[]) {
     step++;
   }
 
+  delete level;
   return EXIT_SUCCESS;
 }

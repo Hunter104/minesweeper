@@ -45,13 +45,13 @@ public:
       }
     }
 
-    // if (level->getBombCount().has_value()) {
-    //   // HACK: conversão pode ser ineficiente
-    //   std::vector<int> variables;
-    //   for (auto unkown : level->getAllUnknowns())
-    //     variables.push_back(hasBombVariables[unkown]);
-    //   generateClauses(variables, level->getBombCount().value());
-    // }
+    if (level->getBombCount().has_value()) {
+      // HACK: conversão pode ser ineficiente
+      std::vector<int> variables;
+      for (auto unkown : level->getAllUnknowns())
+        variables.push_back(hasBombVariables[unkown]);
+      generateClauses(variables, level->getBombCount().value());
+    }
   }
 
   /* Query bomb existence in tile,
