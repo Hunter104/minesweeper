@@ -3,7 +3,6 @@
 #include <argp.h>
 #include <bits/getopt_core.h>
 #include <cerrno>
-#include <condition_variable>
 #include <csignal>
 #include <cstdlib>
 #include <cstring>
@@ -74,14 +73,16 @@ int main(int argc, char *argv[]) {
     level = InputLevel::create();
 
   int step = 1;
+  if (args.test)
+    std::cout << *level;
   Agent agent(level);
   while (!timeout_flag) {
-    if (args.test)
-      std::cout << "step: " << step << '\n' << *level;
     agent.decide();
     if (!level->update())
       return EXIT_SUCCESS;
     step++;
+    if (args.test)
+      std::cout << "step: " << step << '\n' << *level;
   }
 
   std::cout << "0";

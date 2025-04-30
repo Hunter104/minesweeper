@@ -5,7 +5,9 @@
 #include "vector2.cpp"
 #include <cstdio>
 #include <cstdlib>
+#include <deque>
 #include <map>
+#include <queue>
 #include <stdexcept>
 #include <unistd.h>
 #include <vector>
@@ -25,6 +27,8 @@ void generateCombinations(const std::vector<int> &variables, int r,
   }
 }
 
+enum BombQueryResult { HAS_BOMB, NO_BOMB, UNKOWN };
+
 // Negative variables are false and positive ones are true
 class Agent {
 private:
@@ -32,31 +36,8 @@ private:
   Solver solver;
   Matrix2D<int> hasBombVariables;
   std::map<int, Vector2> inverseLookup;
+  std::queue<Vector2> recheckLater;
 
-public:
-  Agent(ILevel *level)
-      : level(level), hasBombVariables(level->getSize(), level->getSize(), -1) {
-    int mapSize = level->getSize();
-    for (int x = 0; x < mapSize; x++) {
-      for (int y = 0; y < mapSize; y++) {
-        int variable = solver.addVariable();
-        hasBombVariables[x][y] = variable;
-        inverseLookup[variable - 1] = {x, y};
-      }
-    }
-
-    // if (level->getBombCount().has_value()) {
-    //   // HACK: conversão pode ser ineficiente
-    //   std::vector<int> variables;
-    //   for (auto unkown : level->getAllUnknowns())
-    //     variables.push_back(hasBombVariables[unkown]);
-    //   generateClauses(variables, level->getBombCount().value());
-    // }
-  }
-
-  /* Query bomb existence in tile,
-  second parameter indicates wether we query
-  its existence or lack thereof */
   bool checkBomb(Vector2 tile, bool exists = true) {
     int var = hasBombVariables[tile];
     var = exists ? var : -var;
@@ -67,9 +48,13 @@ public:
     return true;
   }
 
-  friend std::ostream &operator<<(std::ostream &os, const Agent &kb) {
-    os << kb.solver;
-    return os;
+  BombQueryResult queryBomb(Vector2 tile) {
+    if (checkBomb(tile))
+      return HAS_BOMB;
+    else if (checkBomb(tile, false))
+      return NO_BOMB;
+    else
+      return UNKOWN;
   }
 
   void generateClauses(const std::vector<int> &variables, int k) {
@@ -116,17 +101,58 @@ public:
     }
   }
 
+public:
+  Agent(ILevel *level)
+      : level(level), hasBombVariables(level->getSize(), level->getSize(), -1) {
+    int mapSize = level->getSize();
+    for (int x = 0; x < mapSize; x++) {
+      for (int y = 0; y < mapSize; y++) {
+        int variable = solver.addVariable();
+        hasBombVariables[x][y] = variable;
+        inverseLookup[variable - 1] = {x, y};
+      }
+    }
+
+    // PERF: contagem global de bombas é caríssimo e explode os tempos
+
+    // if (level->getBombCount().has_value()) {
+    //   std::vector<int> variables;
+    //   for (auto unkown : level->getAllUnknowns())
+    //     variables.push_back(hasBombVariables[unkown]);
+    //   generateClauses(variables, level->getBombCount().value());
+    // }
+  }
+
+  friend std::ostream &operator<<(std::ostream &os, const Agent &kb) {
+    os << kb.solver;
+    return os;
+  }
+
+  void queryAndAct(Vector2 tile) {
+    switch (queryBomb(tile)) {
+    case HAS_BOMB:
+      level->mark(tile);
+      break;
+    case NO_BOMB:
+      level->probe(tile);
+      break;
+    case UNKOWN:
+      recheckLater.push(tile);
+      break;
+    }
+  }
+
   void decide() {
     const std::vector<std::pair<Vector2, int>> openCells =
         level->getOpenCells();
     for (auto &[position, value] : openCells) {
+      // NOTE: Talvez isso seja inútil
       solver.addClause(-hasBombVariables[position]);
       if (value == 0)
         continue;
       std::vector<int> variables;
-      for (auto &adjacent : level->getUnkownAdjacent(position)) {
+      for (auto &adjacent : level->getUnkownAdjacent(position))
         variables.push_back(hasBombVariables[adjacent]);
-      }
       if (variables.empty() && value > 0)
         throw std::logic_error(
             "Contradiction: Cell " + std::to_string(position.x) + "," +
@@ -134,12 +160,15 @@ public:
             " bombs but has no unknown neighbors");
       generateClauses(variables, value);
     }
+    // HACK: perigoso
+    for (int i = 0; i < static_cast<int>(recheckLater.size()); i++) {
+      auto pos = recheckLater.front();
+      recheckLater.pop();
+      queryAndAct(pos);
+    }
     for (auto &[position, value] : openCells) {
       for (auto &adjacent : level->getUnkownAdjacent(position)) {
-        if (checkBomb(adjacent))
-          level->mark(adjacent);
-        else if (checkBomb(adjacent, false))
-          level->probe(adjacent);
+        queryAndAct(adjacent);
       }
     }
   }
