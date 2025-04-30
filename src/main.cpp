@@ -54,7 +54,8 @@ void printLevel(ILevel *level) { std::cout << *level; }
 volatile std::sig_atomic_t timeout_flag = false;
 void timeout_handler(int sig) {
   (void)sig;
-  timeout_flag = true;
+  std::cout << "0";
+  exit(0);
 }
 
 int main(int argc, char *argv[]) {
@@ -75,17 +76,15 @@ int main(int argc, char *argv[]) {
   int step = 1;
   if (args.test)
     std::cout << *level;
+
   Agent agent(level);
   while (!timeout_flag) {
     agent.decide();
     if (!level->update())
       return EXIT_SUCCESS;
-    step++;
     if (args.test)
-      std::cout << "step: " << step << '\n' << *level;
+      std::cout << "step: " << ++step << '\n' << *level;
   }
 
-  std::cout << "0";
-  delete level;
   return EXIT_SUCCESS;
 }

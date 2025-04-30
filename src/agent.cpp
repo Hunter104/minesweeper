@@ -101,6 +101,20 @@ private:
     }
   }
 
+  void queryAndAct(Vector2 tile) {
+    switch (queryBomb(tile)) {
+    case HAS_BOMB:
+      level->mark(tile);
+      break;
+    case NO_BOMB:
+      level->probe(tile);
+      break;
+    case UNKOWN:
+      recheckLater.push(tile);
+      break;
+    }
+  }
+
 public:
   Agent(ILevel *level)
       : level(level), hasBombVariables(level->getSize(), level->getSize(), -1) {
@@ -126,20 +140,6 @@ public:
   friend std::ostream &operator<<(std::ostream &os, const Agent &kb) {
     os << kb.solver;
     return os;
-  }
-
-  void queryAndAct(Vector2 tile) {
-    switch (queryBomb(tile)) {
-    case HAS_BOMB:
-      level->mark(tile);
-      break;
-    case NO_BOMB:
-      level->probe(tile);
-      break;
-    case UNKOWN:
-      recheckLater.push(tile);
-      break;
-    }
   }
 
   void decide() {
