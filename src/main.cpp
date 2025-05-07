@@ -60,7 +60,7 @@ int main(int argc, char *argv[]) {
 
   std::signal(SIGALRM, timeout_handler);
 
-  // alarm(9);
+  alarm(9);
   Level *level;
 
   if (args.generate)
