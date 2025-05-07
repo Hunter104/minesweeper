@@ -2,12 +2,14 @@
 #include "generated-level.cpp"
 #include "input-level.cpp"
 #include "level.cpp"
+#include <algorithm>
 #include <argp.h>
 #include <bits/getopt_core.h>
 #include <csignal>
 #include <cstdlib>
 #include <ctime>
 #include <iostream>
+#include <memory>
 #include <unistd.h>
 
 // Optimizations:
@@ -61,18 +63,17 @@ int main(int argc, char *argv[]) {
   std::signal(SIGALRM, timeout_handler);
 
   alarm(9);
-  Level *level;
-
+  std::unique_ptr<Level> level;
   if (args.generate)
-    level = new GeneratedLevel(args.size, args.bombs);
+    level = std::make_unique<GeneratedLevel>(args.size, args.bombs);
   else
-    level = InputLevel::create();
+    level = std::unique_ptr<Level>(InputLevel::create());
 
   int step = 1;
   if (args.test)
     std::cout << *level;
 
-  Agent agent(level);
+  Agent agent(level.get());
   while (1) {
     if (!agent.decide()) {
       std::cout << "0";

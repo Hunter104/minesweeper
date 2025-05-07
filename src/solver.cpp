@@ -5,6 +5,7 @@
 #include <sstream>
 #include <stdexcept>
 #include <string>
+#include <unistd.h>
 #include <vector>
 #define COMMAND "minisat"
 
@@ -25,42 +26,54 @@ private:
   std::stringstream clauses;
 
   bool isSatisfiable(const std::vector<int> &assumption = {}) const {
+    char tempfile[] = "/tmp/minisat_input_XXXXXX";
+    int fd = mkstemp(tempfile);
+    if (fd == -1) {
+      throw std::runtime_error("Failed to create temporary file");
+    }
 
-    FILE *solverIn = popen(command, "w");
-    if (!solverIn) {
-      throw std::runtime_error("Failed to open pipe to " COMMAND);
+    FILE *file = fdopen(fd, "w");
+    if (!file) {
+      close(fd);
+      throw std::runtime_error("Failed to open temporary file");
     }
 
     const int totalClauses = clauseCount + (assumption.empty() ? 0 : 1);
-    fprintf(solverIn, "p cnf %d %d\n%s", variableCount, totalClauses,
-            clauses.str().c_str());
+    fprintf(file, "p cnf %d %d\n", variableCount, totalClauses);
+    fputs(clauses.str().c_str(), file);
 
     if (!assumption.empty()) {
       for (int var : assumption) {
-        fprintf(solverIn, "%d ", var);
+        fprintf(file, "%d ", var);
       }
-      fprintf(solverIn, "0\n");
+      fprintf(file, "0\n");
     }
 
-    fflush(solverIn);
-    const int status = pclose(solverIn);
+    fclose(file);
 
-    if (!WIFEXITED(status))
+    std::string cmd = std::string(COMMAND) + " " + tempfile;
+#ifndef DEBUG
+    cmd += " > /dev/null";
+#endif
+
+    const int status = system(cmd.c_str());
+
+    unlink(tempfile);
+
+    if (!WIFEXITED(status)) {
       throw std::runtime_error(COMMAND " failed to execute with status: " +
                                std::to_string(status));
+    }
 
     const int exitCode = WEXITSTATUS(status);
     switch (exitCode) {
     case SATISFIABLE:
       return true;
-      break;
     case UNSATISFIABLE:
       return false;
-      break;
     default:
       throw std::runtime_error(COMMAND " failed with unexpected exit code: " +
                                std::to_string(exitCode));
-      break;
     }
   }
 
