@@ -60,7 +60,7 @@ int main(int argc, char *argv[]) {
 
   std::signal(SIGALRM, timeout_handler);
 
-  alarm(9);
+  // alarm(9);
   Level *level;
 
   if (args.generate)
@@ -74,9 +74,11 @@ int main(int argc, char *argv[]) {
 
   Agent agent(level);
   while (1) {
-    agent.decide();
-    if (!level->update())
+    if (!agent.decide()) {
+      std::cout << "0";
       return EXIT_SUCCESS;
+    }
+    level->update();
     if (args.test)
       std::cout << "step: " << ++step << '\n' << *level;
   }

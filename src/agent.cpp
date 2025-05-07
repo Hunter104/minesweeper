@@ -4,8 +4,10 @@
 #include "solver.cpp"
 #include "vector2.cpp"
 #include <map>
+#include <set>
 #include <stdexcept>
 #include <unistd.h>
+#include <unordered_set>
 #include <vector>
 
 // Função geradora de combinações
@@ -39,6 +41,7 @@ private:
   Solver solver;
   Matrix2D<int> hasBombVariables;
   std::map<int, Vector2> inverseLookup;
+  std::unordered_set<Vector2> undecided;
   int foundBombs = 0;
 
   bool checkBomb(Vector2 tile, bool exists = true) {
@@ -82,41 +85,7 @@ private:
     }
   }
 
-public:
-  Agent(Level *level)
-      : level(level), hasBombVariables(level->getSize(), level->getSize(), -1) {
-    int mapSize = level->getSize();
-    for (int x = 0; x < mapSize; x++) {
-      for (int y = 0; y < mapSize; y++) {
-        int variable = solver.addVariable();
-        hasBombVariables[x][y] = variable;
-        inverseLookup[variable - 1] = {x, y};
-      }
-    }
-
-    // PERF: contagem global de bombas é caríssimo e explode os tempos
-
-    // if (level->getBombCount().has_value()) {
-    //   std::vector<int> variables;
-    //   for (auto unkown : level->getAllUnknowns())
-    //     variables.push_back(hasBombVariables[unkown]);
-    //   generateClauses(variables, level->getBombCount().value());
-    // }
-  }
-
-  friend std::ostream &operator<<(std::ostream &os, const Agent &kb) {
-    os << kb.solver;
-    return os;
-  }
-
-  void decide() {
-    if (level->getBombCount().has_value() &&
-        foundBombs >= level->getBombCount().value()) {
-      std::cout << "0\n";
-      exit(0);
-    }
-    const auto openCells = level->getOpenCells();
-
+  void feedNewInfo(std::vector<std::pair<Vector2, int>> openCells) {
     for (auto &[position, value] : openCells) {
       solver.addClause(-hasBombVariables[position]);
       if (value == 0)
@@ -128,23 +97,70 @@ public:
 
       generateClauses(variables, value);
     }
+  }
 
-    for (auto &[position, value] : openCells) {
-      for (auto &adjacent : level->getUnkownAdjacent(position)) {
-        switch (queryBomb(adjacent)) {
-        case HAS_BOMB:
-          foundBombs++;
-          level->mark(adjacent);
-          solver.addClause(hasBombVariables[adjacent]);
-          break;
-        case NO_BOMB:
-          level->probe(adjacent);
-          solver.addClause(-hasBombVariables[adjacent]);
-          break;
-        case UNKOWN:
-          break;
-        }
+  void queryTile(Vector2 pos) {
+    Level::Tile tile = level->getTile(pos);
+    if (tile.marked || tile.discovered)
+      return;
+
+    switch (queryBomb(pos)) {
+    case HAS_BOMB:
+      foundBombs++;
+      level->mark(pos);
+      solver.addClause(hasBombVariables[pos]);
+      break;
+    case NO_BOMB:
+      level->probe(pos);
+      solver.addClause(-hasBombVariables[pos]);
+      break;
+    case UNKOWN:
+      undecided.insert(pos);
+      break;
+    }
+  }
+
+public:
+  Agent(Level *level)
+      : level(level), hasBombVariables(level->getSize(), level->getSize(), -1) {
+    int mapSize = level->getSize();
+    for (int x = 0; x < mapSize; x++) {
+      for (int y = 0; y < mapSize; y++) {
+        int variable = solver.addVariable();
+        hasBombVariables[x][y] = variable;
+        inverseLookup[variable - 1] = {x, y};
       }
     }
+  }
+
+  friend std::ostream &operator<<(std::ostream &os, const Agent &kb) {
+    os << kb.solver;
+    return os;
+  }
+
+  bool decide() {
+    if (level->getBombCount().has_value() &&
+        foundBombs >= level->getBombCount().value()) {
+      // All bombs found, probe all remaining tiles
+      for (auto &unknown : level->getAllUnknowns())
+        level->probe(unknown);
+
+      return false;
+    }
+
+    for (Vector2 pos : undecided) {
+      queryTile(pos);
+    }
+
+    const auto openCells = level->getOpenCells();
+    if (openCells.size() == 0)
+      return false;
+    feedNewInfo(openCells);
+
+    for (auto &[position, value] : openCells)
+      for (auto &adjacent : level->getUnkownAdjacent(position))
+        queryTile(adjacent);
+
+    return true;
   }
 };
