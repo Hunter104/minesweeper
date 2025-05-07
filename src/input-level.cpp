@@ -13,10 +13,8 @@ private:
   enum class Action { PROBE, MARK };
   std::vector<std::pair<Vector2, Action>> queuedActions;
 
-  InputLevel(int size, int bombs) {
-    this->size = size;
-    this->bombCount = bombs < 0 ? std::nullopt : std::make_optional(bombs);
-  }
+  InputLevel(int size, int bombs)
+      : Level(size, bombs < 0 ? std::nullopt : std::make_optional(bombs)) {}
 
   void readOpenCells() {
     int openCellsCount;
