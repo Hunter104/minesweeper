@@ -1,115 +1,104 @@
+
 #pragma once
 #include <cstdio>
-#include <cstdlib>
 #include <ostream>
+#include <sstream>
 #include <stdexcept>
 #include <string>
-#include <type_traits>
 #include <vector>
+#define COMMAND "minisat"
 
-enum class SolverStatus : int { SATISFIABLE = 10, UNSATISFIABLE = 20 };
+constexpr int SATISFIABLE = 10;
+constexpr int UNSATISFIABLE = 20;
+
+const char *command =
+#ifdef DEBUG
+    COMMAND;
+#else
+    COMMAND " > /dev/null";
+#endif
 
 class Solver {
 private:
   int variableCount = 0;
   int clauseCount = 0;
-  std::string clauses = "";
-
-  inline std::string clauseToString(const std::vector<int> &clause) const {
-    std::string result;
-    result.reserve(clause.size() * 12 + 2);
-    for (int variable : clause)
-      result += std::to_string(variable) + " ";
-    result += "0\n";
-    return result;
-  }
+  std::stringstream clauses;
 
   bool isSatisfiable(const std::vector<int> &assumption = {}) const {
-#ifdef DEBUG
-    constexpr char command[] = "minisat";
-#else
-    constexpr char command[] = "minisat > /dev/null";
-#endif
 
-    FILE *minisatIn = popen(command, "w");
-    int realClauseCount = clauseCount + (assumption.empty() ? 0 : 1);
+    FILE *solverIn = popen(command, "w");
+    if (!solverIn) {
+      throw std::runtime_error("Failed to open pipe to " COMMAND);
+    }
 
-    std::fprintf(minisatIn, "p cnf %d %d\n%s", variableCount, realClauseCount,
-                 clauses.c_str());
+    const int totalClauses = clauseCount + (assumption.empty() ? 0 : 1);
+    fprintf(solverIn, "p cnf %d %d\n%s", variableCount, totalClauses,
+            clauses.str().c_str());
 
     if (!assumption.empty()) {
-      std::fputs(clauseToString(assumption).c_str(), minisatIn);
+      for (int var : assumption) {
+        fprintf(solverIn, "%d ", var);
+      }
+      fprintf(solverIn, "0\n");
     }
 
-    std::fflush(minisatIn);
+    fflush(solverIn);
+    const int status = pclose(solverIn);
 
-    const int status = pclose(minisatIn);
-    if (!WIFEXITED(status)) {
-      throw std::runtime_error("Minisat failed to execute with status code: " +
+    if (!WIFEXITED(status))
+      throw std::runtime_error(COMMAND " failed to execute with status: " +
                                std::to_string(status));
-    }
 
-    int exitCode = WEXITSTATUS(status);
-
-    if (exitCode == static_cast<int>(SolverStatus::UNSATISFIABLE)) {
-      return false;
-    } else if (exitCode == static_cast<int>(SolverStatus::SATISFIABLE)) {
+    const int exitCode = WEXITSTATUS(status);
+    switch (exitCode) {
+    case SATISFIABLE:
       return true;
-    } else {
-      throw std::runtime_error("Minisat failed with unexpected exit code: " +
+      break;
+    case UNSATISFIABLE:
+      return false;
+      break;
+    default:
+      throw std::runtime_error(COMMAND " failed with unexpected exit code: " +
                                std::to_string(exitCode));
+      break;
     }
   }
 
 public:
   Solver() {
-    if (system("which minisat > /dev/null 2>&1") != 0)
-      throw std::runtime_error("Minisat not found");
-    clauses.reserve(1024);
+    if (system("which " COMMAND " > /dev/null 2>&1") != 0)
+      throw std::runtime_error(COMMAND " not found in PATH");
   }
 
-  // Clasp starts indexing from 1
-  [[nodiscard]] int addVariable() { return ++variableCount; }
-
-  template <
-      typename... Ints,
-      std::enable_if_t<(std::is_convertible_v<Ints, int> && ...), int> = 0>
-  void addClause(Ints... ints) {
-    static_assert((std::is_convertible_v<Ints, int> && ...),
-                  "All arguments must be convertible to int");
-    std::vector<int> clause = {static_cast<int>(ints)...};
-    addClause(clause);
-  }
+  int addVariable() { return ++variableCount; }
 
   void addClause(const std::vector<int> &clause) {
-    if (clause.empty())
-      throw std::logic_error(
-          "Trying to insert empty clause, empty clauses are unsatisfiable.");
+    if (clause.empty()) {
+      throw std::logic_error("Empty clauses are unsatisfiable");
+    }
+
     clauseCount++;
-    clauses += clauseToString(clause);
+    for (int literal : clause) {
+      clauses << literal << " ";
+    }
+    clauses << "0\n";
   }
 
-  /* True = satisfiable
-   * False = unsatisfiable
-   */
+  template <typename... Literals> void addClause(Literals... literals) {
+    addClause(std::vector<int>{literals...});
+  }
+
   bool solve() const { return isSatisfiable(); }
 
   bool solve(const std::vector<int> &assumption) const {
     return isSatisfiable(assumption);
   }
 
-  template <
-      typename... Ints,
-      std::enable_if_t<(std::is_convertible_v<Ints, int> && ...), int> = 0>
-  bool solve(Ints... ints) {
-    static_assert((std::is_convertible_v<Ints, int> && ...),
-                  "All arguments must be convertible to int");
-    std::vector<int> clause = {static_cast<int>(ints)...};
-    return solve(clause);
+  template <typename... Literals> bool solve(Literals... literals) const {
+    return solve(std::vector<int>{literals...});
   }
 
-  friend std::ostream &operator<<(std::ostream &os, const Solver &s) {
-    os << s.clauses;
-    return os;
+  friend std::ostream &operator<<(std::ostream &os, const Solver &solver) {
+    return os << solver.clauses.str();
   }
 };

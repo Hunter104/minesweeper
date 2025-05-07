@@ -23,10 +23,6 @@ struct Vector2 {
     return Vector2(x - other.x, y - other.y);
   }
 
-  Vector2 operator*(int scalar) const {
-    return Vector2(x * scalar, y * scalar);
-  }
-
   Vector2 &operator+=(const Vector2 &other) {
     x += other.x;
     y += other.y;
@@ -36,11 +32,6 @@ struct Vector2 {
   Vector2 &operator-=(const Vector2 &other) {
     x -= other.x;
     y -= other.y;
-    return *this;
-  }
-
-  Vector2 &operator*=(int scalar) {
-    x *= scalar;
     return *this;
   }
 
