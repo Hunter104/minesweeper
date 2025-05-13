@@ -1,12 +1,11 @@
 #include "agent.cpp"
+#include "generatedLevel.cpp"
+#include "inputLevel.cpp"
 #include "level.cpp"
 #include <argp.h>
 #include <bits/getopt_core.h>
-#include <cerrno>
-#include <condition_variable>
 #include <csignal>
 #include <cstdlib>
-#include <cstring>
 #include <ctime>
 #include <iostream>
 #include <unistd.h>
@@ -50,7 +49,7 @@ Arguments parse_args(int argc, char *argv[]) {
 
 void printKb(Agent &kb) { std::cout << kb; }
 
-void printLevel(ILevel *level) { std::cout << *level; }
+void printLevel(Level *level) { std::cout << *level; }
 
 volatile std::sig_atomic_t timeout_flag = false;
 void timeout_handler(int sig) {
@@ -69,7 +68,7 @@ int main(int argc, char *argv[]) {
   std::signal(SIGALRM, timeout_handler);
 
   alarm(9);
-  ILevel *level;
+  Level *level;
 
   if (args.generate)
     level = new GeneratedLevel(args.size, args.bombs);

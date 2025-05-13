@@ -1,5 +1,4 @@
 #pragma once
-#include <cerrno>
 #include <cstdlib>
 #include <cstring>
 #include <ctime>

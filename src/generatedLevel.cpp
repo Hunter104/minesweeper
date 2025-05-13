@@ -8,7 +8,7 @@
 #include <unordered_set>
 #include <vector>
 
-class GeneratedLevel : public ILevel {
+class GeneratedLevel : public Level {
 private:
   Matrix2D<int> playingField;
   Matrix2D<char> discovered;
@@ -29,7 +29,7 @@ private:
 
 public:
   GeneratedLevel(int size, int bombCount)
-      : ILevel(size, bombCount), playingField(size, size, 0),
+      : Level(size, bombCount), playingField(size, size, 0),
         discovered(size, size, 0) {
     if (bombCount >= size * size)
       throw std::invalid_argument(
@@ -87,4 +87,4 @@ public:
   int getCell(Vector2 pos) const override {
     return discovered[pos] ? playingField[pos] : TILE_UNKNOWN;
   }
-}
+};

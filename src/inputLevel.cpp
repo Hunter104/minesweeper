@@ -9,7 +9,7 @@
 #include <utility>
 #include <vector>
 
-class InputLevel : public ILevel {
+class InputLevel : public Level {
 private:
   Matrix2D<int> playingField;
 
@@ -26,7 +26,7 @@ private:
   }
 
 public:
-  static ILevel *create() {
+  static Level *create() {
     int bombs, size, openCellsCount;
     std::cin >> size >> bombs >> openCellsCount;
 
@@ -81,4 +81,4 @@ public:
   }
 
   inline int getCell(Vector2 pos) const override { return playingField[pos]; }
-}
+};

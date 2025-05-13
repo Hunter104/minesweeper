@@ -26,13 +26,13 @@ void generateCombinations(const std::vector<int> &variables, int r,
 // Negative variables are false and positive ones are true
 class Agent {
 private:
-  ILevel *level;
+  Level *level;
   Solver solver;
   Matrix2D<int> hasBombVariables;
   std::map<int, Vector2> inverseLookup;
 
 public:
-  Agent(ILevel *level)
+  Agent(Level *level)
       : level(level), hasBombVariables(level->getSize(), level->getSize(), -1) {
     int mapSize = level->getSize();
     for (int x = 0; x < mapSize; x++) {

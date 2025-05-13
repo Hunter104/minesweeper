@@ -9,14 +9,14 @@
 
 constexpr int TILE_UNKNOWN = -1;
 
-class ILevel {
+class Level {
 protected:
   int size;
   std::optional<int> bombCount;
   std::vector<std::pair<Vector2, int>> newOpenCells;
   std::unordered_set<Vector2> markedCells;
 
-  ILevel(int s = 0, std::optional<int> bc = std::nullopt)
+  Level(int s = 0, std::optional<int> bc = std::nullopt)
       : size(s), bombCount(bc) {}
 
   inline bool isOutOfBounds(Vector2 pos) const {
@@ -36,7 +36,7 @@ public:
   virtual void mark(Vector2 pos) = 0;
   virtual void probe(Vector2 pos) = 0;
   virtual int getCell(Vector2 pos) const = 0;
-  virtual ~ILevel() = default;
+  virtual ~Level() = default;
 
   int getSize() const { return size; }
   std::optional<int> getBombCount() const { return bombCount; }
@@ -68,7 +68,7 @@ public:
     return std::exchange(newOpenCells, {});
   }
 
-  friend std::ostream &operator<<(std::ostream &os, const ILevel &level) {
+  friend std::ostream &operator<<(std::ostream &os, const Level &level) {
     std::cout << "  ";
     for (int i = 0; i < level.size; i++)
       std::cout << i << " ";
