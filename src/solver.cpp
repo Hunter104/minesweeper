@@ -26,6 +26,7 @@ private:
   std::stringstream clauses;
 
   bool isSatisfiable(const std::vector<int> &assumption = {}) const {
+    // TODO: voltar a usar pipes
     char tempfile[] = "/tmp/minisat_input_XXXXXX";
     int fd = mkstemp(tempfile);
     if (fd == -1) {

@@ -33,7 +33,6 @@ public:
 
     Vector2 initial_probe = Vector2::getRandom(size, size);
     std::unordered_set<Vector2> bombPositions;
-
     int placed = 0;
     while (placed < bombCount) {
       Vector2 pos = Vector2::getRandom(size, size);

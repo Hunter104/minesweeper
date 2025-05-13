@@ -139,6 +139,7 @@ public:
   }
 
   bool decide() {
+    // TODO: adicionar fila de tiles indecididos
     if (level->getBombCount().has_value() &&
         foundBombs >= level->getBombCount().value()) {
       // All bombs found, probe all remaining tiles

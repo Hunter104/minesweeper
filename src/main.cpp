@@ -57,6 +57,7 @@ void timeout_handler(int sig) {
 }
 
 int main(int argc, char *argv[]) {
+  // TODO: fazer perfilamento do código
   std::ios_base::sync_with_stdio(false);
   std::srand(static_cast<unsigned>(std::time(nullptr)));
 
