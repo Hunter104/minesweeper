@@ -3,8 +3,6 @@
 #include "matrix2d.cpp"
 #include "solver.cpp"
 #include "vector2.cpp"
-#include <cstdio>
-#include <cstdlib>
 #include <map>
 #include <stdexcept>
 #include <unistd.h>

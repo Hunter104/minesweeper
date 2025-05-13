@@ -62,8 +62,7 @@ private:
     ProcessPipe minisatIn(command, "w");
     int realClauseCount = clauseCount + (assumption.empty() ? 0 : 1);
 
-    std::fprintf(minisatIn, "p cnf %d %d\n%s", variableCount, realClauseCount,
-                 clauses.c_str());
+    std::fputs(clauses.c_str(), minisatIn);
 
     if (!assumption.empty()) {
       std::fputs(clauseToString(assumption).c_str(), minisatIn);
