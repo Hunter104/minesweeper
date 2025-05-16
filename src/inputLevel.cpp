@@ -52,6 +52,8 @@ public:
 
   void update() override {
     int actionCount = queuedActions.size();
+    if (actionCount == 0)
+      return;
     std::cout << actionCount << '\n';
 
     while (!queuedActions.empty()) {

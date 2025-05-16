@@ -14,34 +14,7 @@ private:
   int variableCount = 0;
   int clauseCount = 0;
   std::string clauses = "";
-
-  class ProcessPipe {
-  private:
-    FILE *pipe;
-
-  public:
-    explicit ProcessPipe(const char *cmd, const char *mode)
-        : pipe(popen(cmd, mode)) {
-      if (!pipe)
-        throw std::runtime_error("Failed to start minisat process");
-    }
-
-    ~ProcessPipe() {
-      if (pipe)
-        pclose(pipe);
-    }
-
-    ProcessPipe(const ProcessPipe &) = delete;
-    ProcessPipe &operator=(const ProcessPipe &) = delete;
-
-    operator FILE *() const { return pipe; }
-
-    int close() {
-      int status = pclose(pipe);
-      pipe = nullptr;
-      return status;
-    }
-  };
+  ;
 
   std::string clauseToString(const std::vector<int> &clause) const {
     std::string result;
@@ -61,7 +34,7 @@ private:
     constexpr char command[] = "minisat > /dev/null";
 #endif
 
-    ProcessPipe minisatIn(command, "w");
+    FILE *minisatIn = popen(command, "w");
     std::fputs(clauses.c_str(), minisatIn);
 
     if (!assumption.empty()) {
@@ -70,7 +43,7 @@ private:
 
     std::fflush(minisatIn);
 
-    const int status = minisatIn.close();
+    const int status = pclose(minisatIn);
     if (!WIFEXITED(status)) {
       throw std::runtime_error("Minisat failed to execute with status code: " +
                                std::to_string(status));

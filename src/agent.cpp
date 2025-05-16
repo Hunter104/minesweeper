@@ -3,7 +3,6 @@
 #include "matrix2d.cpp"
 #include "solver.cpp"
 #include "vector2.cpp"
-#include <set>
 #include <stdexcept>
 #include <unistd.h>
 #include <unordered_map>
@@ -126,6 +125,7 @@ public:
     // TODO: adicionar thread pool para otimização de cláusuluas
     for (auto &[position, value] : newOpenCells) {
       solver.addClause(-hasBombVariables[position]);
+      toVisit.erase(position);
       if (value == 0)
         continue;
 
@@ -134,7 +134,8 @@ public:
       level->getUnknownAdjacent(position, currentUnkowns);
       for (auto &adjacent : currentUnkowns) {
         variables.push_back(hasBombVariables[adjacent]);
-        toVisit.insert(adjacent);
+        if (!level->isMarked(adjacent))
+          toVisit.insert(adjacent);
       }
 
       if (variables.empty() && value > 0)
@@ -155,16 +156,17 @@ public:
         it++;
         continue;
       }
-      alreadyActedTiles.insert(pos);
       if (checkBomb(pos)) {
         level->mark(pos);
         foundBombCount++;
         madeProgress = true;
         it = toVisit.erase(it);
+        alreadyActedTiles.insert(pos);
       } else if (checkBomb(pos, false)) {
         level->probe(pos);
         madeProgress = true;
         it = toVisit.erase(it);
+        alreadyActedTiles.insert(pos);
       } else {
         ++it;
       }

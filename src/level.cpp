@@ -63,6 +63,12 @@ public:
     return os;
   }
 
+  // PERF: may not be performant
+  inline bool isMarked(Vector2 pos) { return playingField[pos].marked; }
+
+  // PERF: for debug use only
+  inline Tile getTile(Vector2 pos) { return playingField[pos]; }
+
 protected:
   std::vector<std::pair<Vector2, int>> newOpenCells;
   Matrix2D<Tile> playingField;
