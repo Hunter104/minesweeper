@@ -8,6 +8,18 @@
 #include <utility>
 #include <vector>
 
+#define RESET "\033[0m"
+#define RED "\033[31m"
+#define BRIGHT_RED "\033[91m"
+#define GREEN "\033[32m"
+#define YELLOW "\033[33m"
+#define BLUE "\033[34m"
+#define MAGENTA "\033[35m"
+#define BRIGHT_MAGENTA "\033[95m"
+#define CYAN "\033[36m"
+#define WHITE "\033[37m"
+#define DIM "\033[2m"
+
 struct Tile {
   int num = 0;
   bool marked = false;
@@ -40,30 +52,62 @@ public:
   }
 
   friend std::ostream &operator<<(std::ostream &os, const Level &level) {
-    std::cout << std::setw(3) << " ";
-    for (int i = 0; i < level.size; i++)
-      std::cout << std::setw(3) << i;
-    std::cout << '\n';
+    os << "    ";
+    for (int i = 0; i < level.size; i++) {
+      os << std::setw(3) << i;
+    }
+    os << '\n';
 
     for (int i = 0; i < level.size; i++) {
-      std::cout << std::setw(3) << i;
+      os << std::setw(3) << i;
       for (int j = 0; j < level.size; j++) {
         Tile tile = level.playingField[{i, j}];
         std::string content;
-        if (!tile.discovered)
-          content = tile.marked ? "M" : "#";
-        else if (tile.num == 0)
-          content = ".";
-        else
-          content = std::to_string(tile.num);
-        os << std::setw(3) << content;
+
+        if (!tile.discovered) {
+          if (tile.marked) {
+            content = std::string(RED) + "█ " + RESET;
+          } else {
+            content = std::string(DIM) + "▓ " + RESET;
+          }
+        } else if (tile.hasBomb) {
+          content = std::string(RED) + "B " + RESET;
+        } else if (tile.num == 0) {
+          content = std::string(WHITE) + "◦ " + RESET;
+        } else {
+          switch (tile.num) {
+          case 1:
+            content =
+                std::string(BLUE) + std::to_string(tile.num) + " " + RESET;
+            break;
+          case 2:
+            content =
+                std::string(GREEN) + std::to_string(tile.num) + " " + RESET;
+            break;
+          case 3:
+            content = std::string(BRIGHT_RED) + std::to_string(tile.num) + " " +
+                      RESET;
+            break;
+          case 4:
+            content =
+                std::string(MAGENTA) + std::to_string(tile.num) + " " + RESET;
+            break;
+          case 5:
+            content =
+                std::string(YELLOW) + std::to_string(tile.num) + " " + RESET;
+            break;
+          default:
+            content =
+                std::string(CYAN) + std::to_string(tile.num) + " " + RESET;
+            break;
+          }
+        }
+        os << content;
       }
       os << '\n';
     }
     return os;
-  }
-
-  // PERF: may not be performant
+  } // PERF: may not be performant
   inline bool isMarked(Vector2 pos) { return playingField[pos].marked; }
 
   // NOTE: for debug use only
