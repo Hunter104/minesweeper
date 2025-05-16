@@ -6,6 +6,7 @@
 #include <map>
 #include <stdexcept>
 #include <unistd.h>
+#include <unordered_map>
 #include <vector>
 
 // Função geradora de combinações
@@ -29,7 +30,7 @@ private:
   Level *level;
   Solver solver;
   Matrix2D<int> hasBombVariables;
-  std::map<int, Vector2> inverseLookup;
+  std::unordered_map<int, Vector2> inverseLookup;
   int foundBombCount = 0;
 
 public:
