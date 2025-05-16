@@ -7,6 +7,7 @@
 #include <stdexcept>
 #include <unistd.h>
 #include <unordered_map>
+#include <unordered_set>
 #include <vector>
 
 // Função geradora de combinações
@@ -30,12 +31,13 @@ private:
   Solver solver;
   Matrix2D<int> hasBombVariables;
   std::unordered_map<int, Vector2> inverseLookup;
+  std::unordered_set<Vector2> alreadyActedTiles;
   int foundBombCount = 0;
 
 public:
   Agent(Level *level)
-      : level(level), hasBombVariables(level->getSize(), level->getSize(), -1) {
-    int mapSize = level->getSize();
+      : level(level), hasBombVariables(level->size, level->size, -1) {
+    int mapSize = level->size;
     for (int x = 0; x < mapSize; x++) {
       for (int y = 0; y < mapSize; y++) {
         int variable = solver.addVariable();
@@ -108,40 +110,57 @@ public:
   }
 
   bool decide() {
-    if (level->getBombCount().has_value() &&
-        level->getBombCount().value() == foundBombCount)
+    if (level->bombCount.has_value() &&
+        level->bombCount.value() == foundBombCount)
       return false;
 
     const auto &newOpenCells = level->getOpenCells();
     if (newOpenCells.empty())
       return false;
 
+    std::vector<Vector2> unknownFrontier;
+    std::vector<Vector2> currentUnkowns;
+    // Max 9 adjacent tiles
+    currentUnkowns.reserve(9);
+
     for (auto &[position, value] : newOpenCells) {
       solver.addClause(-hasBombVariables[position]);
       if (value == 0)
         continue;
+
+      // Get variables for adjacent unkown spaces
       std::vector<int> variables;
-      for (auto &adjacent : level->getUnknownAdjacent(position)) {
+      level->getUnknownAdjacent(position, currentUnkowns);
+      unknownFrontier.insert(unknownFrontier.end(), currentUnkowns.begin(),
+                             currentUnkowns.end());
+      for (auto &adjacent : currentUnkowns) {
         variables.push_back(hasBombVariables[adjacent]);
       }
+
       if (variables.empty() && value > 0)
         throw std::logic_error(
             "Contradiction: Cell " + std::to_string(position.x) + "," +
             std::to_string(position.y) + " shows " + std::to_string(value) +
             " bombs but has no unknown neighbors");
+
       generateClauses(variables, value);
     }
 
-    for (auto &[position, value] : newOpenCells) {
-      for (auto &adjacent : level->getUnknownAdjacent(position)) {
-        if (checkBomb(adjacent)) {
-          level->mark(adjacent);
-          foundBombCount++;
-        } else if (checkBomb(adjacent, false))
-          level->probe(adjacent);
+    bool madeProgress = false;
+    for (auto &adjacent : unknownFrontier) {
+      if (alreadyActedTiles.find(adjacent) != alreadyActedTiles.end())
+        continue;
+      alreadyActedTiles.insert(adjacent);
+      if (checkBomb(adjacent)) {
+        level->mark(adjacent);
+        foundBombCount++;
+        madeProgress = true;
+      } else if (checkBomb(adjacent, false)) {
+        level->probe(adjacent);
+        madeProgress = true;
       }
     }
 
-    return true;
+    return madeProgress;
   }
 };

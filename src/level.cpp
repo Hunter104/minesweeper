@@ -8,8 +8,6 @@
 #include <utility>
 #include <vector>
 
-constexpr int TILE_UNKNOWN = -1;
-
 struct Tile {
   int num = 0;
   bool marked = false;
@@ -18,44 +16,23 @@ struct Tile {
 };
 
 class Level {
-protected:
-  int size;
-  std::optional<int> bombCount;
-  std::vector<std::pair<Vector2, int>> newOpenCells;
-  Matrix2D<Tile> playingField;
-
-  Level(int s = 0, std::optional<int> bc = std::nullopt)
-      : size(s), bombCount(bc), playingField(s, s) {}
-
-  inline bool isOutOfBounds(Vector2 pos) const {
-    return pos.x < 0 || pos.y < 0 || pos.x >= size || pos.y >= size;
-  }
-
-  void setCell(Vector2 pos, int value) {
-    newOpenCells.emplace_back(pos, value);
-  }
-
-  const std::vector<Vector2> directions = {{-1, -1}, {-1, 0}, {-1, 1}, {0, -1},
-                                           {0, 1},   {1, -1}, {1, 0},  {1, 1}};
-
 public:
+  const int size;
+  const std::optional<int> bombCount;
+
   virtual void update() = 0;
   virtual void mark(Vector2 pos) = 0;
   virtual void probe(Vector2 pos) = 0;
   virtual ~Level() = default;
 
-  int getSize() const { return size; }
-  std::optional<int> getBombCount() const { return bombCount; }
-
-  std::vector<Vector2> getUnknownAdjacent(Vector2 pos) const {
-    std::vector<Vector2> unkowns;
+  void getUnknownAdjacent(Vector2 pos, std::vector<Vector2> &result) const {
+    result.clear();
     for (auto &direction : directions) {
       Vector2 newPos = pos + direction;
-      if (!isOutOfBounds(newPos) && !playingField[newPos].discovered)
-        unkowns.push_back(newPos);
+      if (!isOutOfBounds(newPos) && !playingField[newPos].discovered) {
+        result.push_back(newPos);
+      }
     }
-
-    return unkowns;
   }
 
   std::vector<std::pair<Vector2, int>> getOpenCells() {
@@ -85,4 +62,18 @@ public:
     }
     return os;
   }
+
+protected:
+  std::vector<std::pair<Vector2, int>> newOpenCells;
+  Matrix2D<Tile> playingField;
+
+  Level(int s = 0, std::optional<int> bc = std::nullopt)
+      : size(s), bombCount(bc), playingField(s, s) {}
+
+  inline bool isOutOfBounds(Vector2 pos) const {
+    return pos.x < 0 || pos.y < 0 || pos.x >= size || pos.y >= size;
+  }
+
+  const std::vector<Vector2> directions = {{-1, -1}, {-1, 0}, {-1, 1}, {0, -1},
+                                           {0, 1},   {1, -1}, {1, 0},  {1, 1}};
 };

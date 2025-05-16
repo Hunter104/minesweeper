@@ -64,16 +64,19 @@ int main(int argc, char *argv[]) {
   std::srand(static_cast<unsigned>(std::time(nullptr)));
 
   Arguments args = parse_args(argc, argv);
-
+#ifndef DEBUG
   std::signal(SIGALRM, timeout_handler);
-
   alarm(9);
+#endif
   Level *level;
 
   if (args.generate)
     level = new GeneratedLevel(args.size, args.bombs);
   else
     level = InputLevel::create();
+
+  if (args.test)
+    std::cout << "step: " << 0 << '\n' << *level << '\n';
 
   int step = 1;
   Agent agent(level);
