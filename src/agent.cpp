@@ -172,6 +172,14 @@ public:
       }
     }
 
+#ifdef DEBUG
+    std::cout << "Couldn't make any more progress on tiles: \n";
+    for (auto pos : toVisit) {
+      std::cout << pos << ' ';
+    }
+    std::cout << std::endl;
+    std::cout << *level;
+#endif // DEBUG
     return madeProgress;
   }
 };
