@@ -22,7 +22,7 @@ private:
     if (playingField[pos].num != 0)
       return;
 
-    for (auto &direction : Vector2::AllDirections()) {
+    for (auto &direction : directions) {
       revealCells(direction + pos);
     }
   }
@@ -39,7 +39,7 @@ public:
     std::unordered_set<Vector2> excluded;
     excluded.insert(initial_probe);
     std::unordered_set<Vector2> bombPositions;
-    for (const auto &adjacent : Vector2::AllDirections()) {
+    for (const auto &adjacent : directions) {
       Vector2 adjPos = initial_probe + adjacent;
       if (!isOutOfBounds(adjPos)) {
         excluded.insert(adjPos);
@@ -61,7 +61,7 @@ public:
       bombPositions.insert(pos);
       placed++;
 
-      for (const auto &adjacent : Vector2::AllDirections()) {
+      for (const auto &adjacent : directions) {
         Vector2 adjPos = pos + adjacent;
         if (!isOutOfBounds(adjPos)) {
           playingField[adjPos].num++;

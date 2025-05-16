@@ -49,12 +49,6 @@ struct Vector2 {
 
   bool operator!=(const Vector2 &other) const { return !(*this == other); }
 
-  static const std::vector<Vector2> &AllDirections() {
-    static const std::vector<Vector2> directions = {
-        {-1, -1}, {-1, 0}, {-1, 1}, {0, -1}, {0, 1}, {1, -1}, {1, 0}, {1, 1}};
-    return directions;
-  }
-
   friend std::ostream &operator<<(std::ostream &os, const Vector2 &v) {
     return os << "(" << v.x << ", " << v.y << ")";
   }

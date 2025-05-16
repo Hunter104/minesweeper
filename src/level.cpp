@@ -35,6 +35,9 @@ protected:
     newOpenCells.emplace_back(pos, value);
   }
 
+  const std::vector<Vector2> directions = {{-1, -1}, {-1, 0}, {-1, 1}, {0, -1},
+                                           {0, 1},   {1, -1}, {1, 0},  {1, 1}};
+
 public:
   virtual void update() = 0;
   virtual void mark(Vector2 pos) = 0;

@@ -3,6 +3,7 @@
 #include "matrix2d.cpp"
 #include "solver.cpp"
 #include "vector2.cpp"
+#include <set>
 #include <stdexcept>
 #include <unistd.h>
 #include <unordered_map>
