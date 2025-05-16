@@ -112,7 +112,6 @@ public:
   bool decide() {
     if (level->bombCount.has_value() &&
         level->bombCount.value() == foundBombCount) {
-      // NOTE: será que deve parar mesmo ao achar todas as bombas?
 #ifdef DEBUG
       std::cout << "Found all bombs, stopping." << std::endl;
 #endif

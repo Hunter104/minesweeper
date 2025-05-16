@@ -6,9 +6,10 @@
 #include <string>
 #include <type_traits>
 #include <vector>
+#define SOLVER "minisat"
 
 enum class SolverStatus : int { SATISFIABLE = 10, UNSATISFIABLE = 20 };
-// Clasp wrapper, similar to minisat's solver class
+
 class Solver {
 private:
   int variableCount = 0;
@@ -27,44 +28,10 @@ private:
     return result;
   }
 
-  bool isSatisfiable(const std::vector<int> &assumption = {}) const {
-#ifdef DEBUG
-    constexpr char command[] = "minisat";
-#else
-    constexpr char command[] = "minisat > /dev/null";
-#endif
-
-    FILE *minisatIn = popen(command, "w");
-    std::fputs(clauses.c_str(), minisatIn);
-
-    if (!assumption.empty()) {
-      std::fputs(clauseToString(assumption).c_str(), minisatIn);
-    }
-
-    std::fflush(minisatIn);
-
-    const int status = pclose(minisatIn);
-    if (!WIFEXITED(status)) {
-      throw std::runtime_error("Minisat failed to execute with status code: " +
-                               std::to_string(status));
-    }
-
-    int exitCode = WEXITSTATUS(status);
-
-    if (exitCode == static_cast<int>(SolverStatus::UNSATISFIABLE)) {
-      return false;
-    } else if (exitCode == static_cast<int>(SolverStatus::SATISFIABLE)) {
-      return true;
-    } else {
-      throw std::runtime_error("Minisat failed with unexpected exit code: " +
-                               std::to_string(exitCode));
-    }
-  }
-
 public:
   Solver() {
-    if (system("which minisat > /dev/null 2>&1") != 0)
-      throw std::runtime_error("Minisat not found");
+    if (system("which " SOLVER " > /dev/null 2>&1") != 0)
+      throw std::runtime_error(SOLVER " not found");
     clauses.reserve(1024);
   }
 
@@ -89,14 +56,41 @@ public:
     clauses += clauseToString(clause);
   }
 
-  /* True = satisfiable
-   * False = unsatisfiable
-   */
-  bool solve() const { return isSatisfiable(); }
-
   bool solve(const std::vector<int> &assumption) const {
-    return isSatisfiable(assumption);
+#ifdef DEBUG
+    constexpr char command[] = SOLVER;
+#else
+    constexpr char command[] = SOLVER " > /dev/null";
+#endif
+
+    FILE *solverIn = popen(command, "w");
+    std::fputs(clauses.c_str(), solverIn);
+
+    if (!assumption.empty()) {
+      std::fputs(clauseToString(assumption).c_str(), solverIn);
+    }
+
+    std::fflush(solverIn);
+
+    const int status = pclose(solverIn);
+    if (!WIFEXITED(status)) {
+      throw std::runtime_error(SOLVER " failed to execute with status code: " +
+                               std::to_string(status));
+    }
+
+    int exitCode = WEXITSTATUS(status);
+
+    if (exitCode == static_cast<int>(SolverStatus::UNSATISFIABLE)) {
+      return false;
+    } else if (exitCode == static_cast<int>(SolverStatus::SATISFIABLE)) {
+      return true;
+    } else {
+      throw std::runtime_error(SOLVER "failed with unexpected exit code: " +
+                               std::to_string(exitCode));
+    }
   }
+
+  bool solve() const { return solve({}); }
 
   template <
       typename... Ints,
