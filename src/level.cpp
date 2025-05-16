@@ -55,18 +55,6 @@ public:
     return unkowns;
   }
 
-  std::vector<Vector2> getAllUnknowns() const {
-    std::vector<Vector2> unkowns;
-    for (int i = 0; i < size; i++) {
-      for (int j = 0; j < size; j++) {
-        if (!playingField[{i, j}].discovered)
-          unkowns.emplace_back(i, j);
-      }
-    }
-
-    return unkowns;
-  }
-
   std::vector<std::pair<Vector2, int>> getOpenCells() {
     return std::exchange(newOpenCells, {});
   }

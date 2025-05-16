@@ -3,7 +3,6 @@
 #include "matrix2d.cpp"
 #include "solver.cpp"
 #include "vector2.cpp"
-#include <map>
 #include <stdexcept>
 #include <unistd.h>
 #include <unordered_map>
@@ -24,7 +23,6 @@ void generateCombinations(const std::vector<int> &variables, int r,
   }
 }
 
-// Negative variables are false and positive ones are true
 class Agent {
 private:
   Level *level;
