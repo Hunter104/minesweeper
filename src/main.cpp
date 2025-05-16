@@ -76,13 +76,13 @@ int main(int argc, char *argv[]) {
     level = InputLevel::create();
 
   if (args.test)
-    std::cout << "step: " << 0 << '\n' << *level << '\n';
+    std::cout << "step: " << 0 << '\n' << *level << std::endl;
 
   int step = 1;
   Agent agent(level);
   while (!timeout_flag) {
     if (args.test)
-      std::cout << "step: " << step << '\n' << *level << '\n';
+      std::cout << "step: " << step << '\n' << *level << std::endl;
     if (!agent.decide())
       break;
     level->update();

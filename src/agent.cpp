@@ -32,6 +32,7 @@ private:
   Matrix2D<int> hasBombVariables;
   std::unordered_map<int, Vector2> inverseLookup;
   std::unordered_set<Vector2> alreadyActedTiles;
+  std::unordered_set<Vector2> toVisit;
   int foundBombCount = 0;
 
 public:
@@ -114,15 +115,15 @@ public:
         level->bombCount.value() == foundBombCount)
       return false;
 
-    const auto &newOpenCells = level->getOpenCells();
+    const auto newOpenCells = level->getOpenCells();
     if (newOpenCells.empty())
       return false;
 
-    std::vector<Vector2> unknownFrontier;
     std::vector<Vector2> currentUnkowns;
     // Max 9 adjacent tiles
     currentUnkowns.reserve(9);
 
+    // TODO: adicionar thread pool para otimização de cláusuluas
     for (auto &[position, value] : newOpenCells) {
       solver.addClause(-hasBombVariables[position]);
       if (value == 0)
@@ -131,10 +132,9 @@ public:
       // Get variables for adjacent unkown spaces
       std::vector<int> variables;
       level->getUnknownAdjacent(position, currentUnkowns);
-      unknownFrontier.insert(unknownFrontier.end(), currentUnkowns.begin(),
-                             currentUnkowns.end());
       for (auto &adjacent : currentUnkowns) {
         variables.push_back(hasBombVariables[adjacent]);
+        toVisit.insert(adjacent);
       }
 
       if (variables.empty() && value > 0)
@@ -146,18 +146,27 @@ public:
       generateClauses(variables, value);
     }
 
+    // TODO: adicionar thread pool para otimização de verificação
+    // TODO: adicionar fila para locais indecididos
     bool madeProgress = false;
-    for (auto &adjacent : unknownFrontier) {
-      if (alreadyActedTiles.find(adjacent) != alreadyActedTiles.end())
+    for (auto it = toVisit.begin(); it != toVisit.end();) {
+      Vector2 pos = *it;
+      if (alreadyActedTiles.find(pos) != alreadyActedTiles.end()) {
+        it++;
         continue;
-      alreadyActedTiles.insert(adjacent);
-      if (checkBomb(adjacent)) {
-        level->mark(adjacent);
+      }
+      alreadyActedTiles.insert(pos);
+      if (checkBomb(pos)) {
+        level->mark(pos);
         foundBombCount++;
         madeProgress = true;
-      } else if (checkBomb(adjacent, false)) {
-        level->probe(adjacent);
+        it = toVisit.erase(it);
+      } else if (checkBomb(pos, false)) {
+        level->probe(pos);
         madeProgress = true;
+        it = toVisit.erase(it);
+      } else {
+        ++it;
       }
     }
 

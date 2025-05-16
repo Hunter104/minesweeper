@@ -73,7 +73,12 @@ public:
 
   void update() override {}
 
-  void mark(Vector2 pos) override { playingField[pos].marked = true; }
+  void mark(Vector2 pos) override {
+#ifdef DEBUG
+    std::cout << pos << " marked" << std::endl;
+#endif
+    playingField[pos].marked = true;
+  }
 
   void probe(Vector2 pos) override {
     if (playingField[pos].hasBomb)
