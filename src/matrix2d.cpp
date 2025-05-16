@@ -1,6 +1,5 @@
 #pragma once
 #include "vector2.cpp"
-#include <stdexcept>
 #include <vector>
 
 template <typename T> class Matrix2D {
