@@ -70,7 +70,7 @@ public:
     clauses += clauseToString(clause);
   }
 
-  bool solve(const std::vector<int> &assumption) const {
+  SolverStatus solve(const std::vector<int> &assumption) const {
 #ifdef DEBUG
     constexpr char command[] = SOLVER;
 #else
@@ -95,21 +95,21 @@ public:
     int exitCode = WEXITSTATUS(status);
 
     if (exitCode == static_cast<int>(SolverStatus::UNSATISFIABLE)) {
-      return false;
+      return SolverStatus::UNSATISFIABLE;
     } else if (exitCode == static_cast<int>(SolverStatus::SATISFIABLE)) {
-      return true;
+      return SolverStatus::SATISFIABLE;
     } else {
       throw std::runtime_error(SOLVER "failed with unexpected exit code: " +
                                std::to_string(exitCode));
     }
   }
 
-  bool solve() const { return solve({}); }
+  SolverStatus solve() const { return solve({}); }
 
   template <
       typename... Ints,
       std::enable_if_t<(std::is_convertible_v<Ints, int> && ...), int> = 0>
-  bool solve(Ints... ints) {
+  SolverStatus solve(Ints... ints) {
     static_assert((std::is_convertible_v<Ints, int> && ...),
                   "All arguments must be convertible to int");
     std::vector<int> clause = {static_cast<int>(ints)...};

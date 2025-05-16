@@ -39,7 +39,7 @@ public:
     int var = hasBombVariables[tile];
     var = exists ? var : -var;
 
-    if (solver.solve(-var))
+    if (solver.solve(-var) == SolverStatus::SATISFIABLE)
       return false;
     solver.addClause(var);
     return true;
