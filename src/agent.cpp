@@ -120,14 +120,6 @@ public:
     }
 
     const auto newOpenCells = level->getOpenCells();
-    // NOTE: mesmo com novas células vazias, pode se utilizar o aprendizado da
-    // última rodada para tentar algo novo
-    if (newOpenCells.empty()) {
-#ifdef DEBUG
-      std::cout << "No new opened tiles" << std::endl;
-#endif
-      return false;
-    }
 
     std::vector<Vector2> currentUnkowns;
     // Max 9 adjacent tiles
