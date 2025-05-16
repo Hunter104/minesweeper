@@ -11,8 +11,6 @@
 
 class InputLevel : public Level {
 private:
-  Matrix2D<int> playingField;
-
   enum class Action { PROBE, MARK };
   std::vector<std::pair<Vector2, Action>> queuedActions;
 
@@ -20,10 +18,8 @@ private:
     newOpenCells.emplace_back(pos, value);
   }
 
-  InputLevel(int size, int bombs) : playingField(size, size, TILE_UNKNOWN) {
-    this->size = size;
-    this->bombCount = bombs < 0 ? std::nullopt : std::make_optional(bombs);
-  }
+  InputLevel(int size, int bombs)
+      : Level(size, bombs < 0 ? std::nullopt : std::make_optional(bombs)) {}
 
 public:
   static Level *create() {
@@ -36,14 +32,14 @@ public:
       int num;
       std::cin >> pos >> num;
       level->setCell(pos, num);
-      level->playingField[pos] = num;
+      level->playingField[pos].num = num;
     }
 
     return level;
   }
 
   void mark(Vector2 pos) override {
-    markedCells.insert(pos); // NEW: mark it
+    playingField[pos].marked = true;
     queuedActions.emplace_back(pos, Action::MARK);
   }
 
@@ -51,10 +47,8 @@ public:
     queuedActions.emplace_back(pos, Action::PROBE);
   }
 
-  bool update() override {
+  void update() override {
     int actionCount = queuedActions.size();
-    if (actionCount == 0)
-      return false;
     std::cout << actionCount << '\n';
 
     for (auto &action : queuedActions) {
@@ -74,11 +68,7 @@ public:
       int num;
       std::cin >> pos >> num;
       setCell(pos, num);
-      playingField[pos] = num;
+      playingField[pos].num = num;
     }
-
-    return true;
   }
-
-  inline int getCell(Vector2 pos) const override { return playingField[pos]; }
 };

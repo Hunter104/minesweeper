@@ -30,6 +30,7 @@ private:
   Solver solver;
   Matrix2D<int> hasBombVariables;
   std::map<int, Vector2> inverseLookup;
+  int foundBombCount = 0;
 
 public:
   Agent(Level *level)
@@ -42,14 +43,6 @@ public:
         inverseLookup[variable - 1] = {x, y};
       }
     }
-
-    // if (level->getBombCount().has_value()) {
-    //   // HACK: conversão pode ser ineficiente
-    //   std::vector<int> variables;
-    //   for (auto unkown : level->getAllUnknowns())
-    //     variables.push_back(hasBombVariables[unkown]);
-    //   generateClauses(variables, level->getBombCount().value());
-    // }
   }
 
   /* Query bomb existence in tile,
@@ -114,10 +107,16 @@ public:
     }
   }
 
-  void decide() {
-    const std::vector<std::pair<Vector2, int>> openCells =
-        level->getOpenCells();
-    for (auto &[position, value] : openCells) {
+  bool decide() {
+    if (level->getBombCount().has_value() &&
+        level->getBombCount().value() == foundBombCount)
+      return false;
+
+    const auto &newOpenCells = level->getOpenCells();
+    if (newOpenCells.empty())
+      return false;
+
+    for (auto &[position, value] : newOpenCells) {
       solver.addClause(-hasBombVariables[position]);
       if (value == 0)
         continue;
@@ -132,13 +131,17 @@ public:
             " bombs but has no unknown neighbors");
       generateClauses(variables, value);
     }
-    for (auto &[position, value] : openCells) {
+
+    for (auto &[position, value] : newOpenCells) {
       for (auto &adjacent : level->getUnkownAdjacent(position)) {
-        if (checkBomb(adjacent))
+        if (checkBomb(adjacent)) {
           level->mark(adjacent);
-        else if (checkBomb(adjacent, false))
+          foundBombCount++;
+        } else if (checkBomb(adjacent, false))
           level->probe(adjacent);
       }
     }
+
+    return true;
   }
 };

@@ -10,27 +10,25 @@
 
 class GeneratedLevel : public Level {
 private:
-  Matrix2D<int> playingField;
-  Matrix2D<char> discovered;
   bool updated = false;
 
   void revealCells(Vector2 pos) {
-    if (isOutOfBounds(pos) || discovered[pos] || playingField[pos] < 0)
+    if (isOutOfBounds(pos) || playingField[pos].discovered)
       return;
 
-    discovered[pos] = true;
-    newOpenCells.emplace_back(pos, playingField[pos]);
-    if (playingField[pos] == 0) {
-      for (auto &direction : Vector2::AllDirections()) {
-        revealCells(direction + pos);
-      }
+    playingField[pos].discovered = true;
+    newOpenCells.emplace_back(pos, playingField[pos].num);
+
+    if (playingField[pos].num != 0)
+      return;
+
+    for (auto &direction : Vector2::AllDirections()) {
+      revealCells(direction + pos);
     }
   }
 
 public:
-  GeneratedLevel(int size, int bombCount)
-      : Level(size, bombCount), playingField(size, size, 0),
-        discovered(size, size, 0) {
+  GeneratedLevel(int size, int bombCount) : Level(size, bombCount) {
     if (bombCount >= size * size)
       throw std::invalid_argument(
           "Bomb count higher than or equal to tile count.");
@@ -38,53 +36,50 @@ public:
       throw std::runtime_error("Bomb count must be 1 or higher");
 
     Vector2 initial_probe = Vector2::getRandom(size, size);
+    std::unordered_set<Vector2> excluded;
+    excluded.insert(initial_probe);
     std::unordered_set<Vector2> bombPositions;
+    for (const auto &adjacent : Vector2::AllDirections()) {
+      Vector2 adjPos = initial_probe + adjacent;
+      if (!isOutOfBounds(adjPos)) {
+        excluded.insert(adjPos);
+      }
+    }
 
+    if (bombCount > size * size - static_cast<int>(excluded.size())) {
+      throw std::logic_error(
+          "More bombs than avaliable spaces in level generation");
+    }
     int placed = 0;
     while (placed < bombCount) {
       Vector2 pos = Vector2::getRandom(size, size);
-      if (pos == initial_probe || bombPositions.count(pos) > 0)
+      if (playingField[pos].hasBomb || excluded.find(pos) != excluded.end())
         continue;
 
-      playingField[pos] = -50;
+      playingField[pos].num = -50;
+      playingField[pos].hasBomb = true;
       bombPositions.insert(pos);
       placed++;
 
       for (const auto &adjacent : Vector2::AllDirections()) {
         Vector2 adjPos = pos + adjacent;
         if (!isOutOfBounds(adjPos)) {
-          playingField[adjPos]++;
+          playingField[adjPos].num++;
         }
       }
     }
     probe(initial_probe);
   }
 
-  bool update() override {
-    if (updated) {
-      updated = false;
-      return true;
-    } else {
-      return false;
-    }
-    return true;
-  }
+  void update() override {}
 
-  void mark(Vector2 pos) override {
-    updated = true;
-    markedCells.insert(pos);
-  }
+  void mark(Vector2 pos) override { playingField[pos].marked = true; }
 
   void probe(Vector2 pos) override {
-    updated = true;
-    if (playingField[pos] < 0)
+    if (playingField[pos].hasBomb)
       throw std::runtime_error("Position " + std::to_string(pos.x) + "," +
                                std::to_string(pos.y) + " has a bomb.");
 
     revealCells(pos);
-  }
-
-  int getCell(Vector2 pos) const override {
-    return discovered[pos] ? playingField[pos] : TILE_UNKNOWN;
   }
 };

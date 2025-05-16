@@ -1,5 +1,6 @@
 #pragma once
 #include "vector2.cpp"
+#include <stdexcept>
 #include <vector>
 
 template <typename T> class Matrix2D {
@@ -9,11 +10,13 @@ public:
   Matrix2D(int sizeX, int sizeY, T defaultVal = T())
       : data(sizeX, std::vector<T>(sizeY, defaultVal)) {}
 
-  std::vector<T> &operator[](int x) { return data[x]; }
+  std::vector<T> &operator[](int x) {
+    return data.at(x); // throws std::out_of_range if x is invalid
+  }
 
-  const std::vector<T> &operator[](int x) const { return data[x]; }
+  const std::vector<T> &operator[](int x) const { return data.at(x); }
 
-  T &operator[](const Vector2 &v) { return data[v.x][v.y]; }
+  T &operator[](const Vector2 &v) { return data.at(v.x).at(v.y); }
 
-  const T &operator[](const Vector2 &v) const { return data[v.x][v.y]; }
+  const T &operator[](const Vector2 &v) const { return data.at(v.x).at(v.y); }
 };

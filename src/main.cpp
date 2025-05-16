@@ -15,8 +15,8 @@
 struct Arguments {
   bool test = false;
   bool generate = false;
-  int size = 10;
-  int bombs = 15;
+  int size = 9;
+  int bombs = 10;
 };
 
 Arguments parse_args(int argc, char *argv[]) {
@@ -79,14 +79,14 @@ int main(int argc, char *argv[]) {
   Agent agent(level);
   while (!timeout_flag) {
     if (args.test)
-      std::cout << "step: " << step << '\n' << *level;
-    agent.decide();
-    if (!level->update())
+      std::cout << "step: " << step << '\n' << *level << '\n';
+    if (!agent.decide())
       break;
+    level->update();
     step++;
   }
 
-  std::cout << "0";
+  std::cout << "0\n";
   delete level;
   return EXIT_SUCCESS;
 }

@@ -60,8 +60,6 @@ private:
 #endif
 
     ProcessPipe minisatIn(command, "w");
-    int realClauseCount = clauseCount + (assumption.empty() ? 0 : 1);
-
     std::fputs(clauses.c_str(), minisatIn);
 
     if (!assumption.empty()) {
