@@ -32,10 +32,10 @@ $(BUILD_DIR)/$(EXECUTABLE): $(MAIN_FILE) $(SRC_FILES_EXCLUDING_MAIN)
 clean:
 	$(RM) -r $(BUILD_DIR)
 
-debug: clean
-	$(MAKE) EXECUTABLE=deb all CXXFLAGS_DBG='-DDEBUG -ggdb3'
+debug:
+	$(MAKE) EXECUTABLE=deb CXXFLAGS='-DDEBUG -ggdb3 -O0'
 
-prof: clean
-	$(MAKE) EXECUTABLE=prof all CXXFLAGS='-pg'
+prof:
+	$(MAKE) EXECUTABLE=prof CXXFLAGS='-pg'
 
 .PHONY: all clean debug
