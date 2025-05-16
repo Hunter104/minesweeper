@@ -43,12 +43,14 @@ private:
     }
   };
 
-  inline std::string clauseToString(const std::vector<int> &clause) const {
+  std::string clauseToString(const std::vector<int> &clause) const {
     std::string result;
     result.reserve(clause.size() * 12 + 2);
-    for (int variable : clause)
-      result += std::to_string(variable) + " ";
-    result += "0\n";
+    for (int variable : clause) {
+      result.append(std::to_string(variable));
+      result.push_back(' ');
+    }
+    result.append("0\n");
     return result;
   }
 
