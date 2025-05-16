@@ -66,7 +66,7 @@ public:
   // PERF: may not be performant
   inline bool isMarked(Vector2 pos) { return playingField[pos].marked; }
 
-  // PERF: for debug use only
+  // NOTE: for debug use only
   inline Tile getTile(Vector2 pos) { return playingField[pos]; }
 
 protected:
