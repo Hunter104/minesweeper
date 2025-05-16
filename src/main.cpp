@@ -54,7 +54,7 @@ void printLevel(Level *level) { std::cout << *level; }
 volatile std::sig_atomic_t timeout_flag = false;
 void timeout_handler(int sig) {
   (void)sig;
-  write(STDOUT_FILENO, "0", 1);
+  write(STDOUT_FILENO, "0\n", 1);
   _exit(0);
 }
 
