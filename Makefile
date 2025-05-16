@@ -1,6 +1,5 @@
 CXX=g++
-CXXFLAGS=-Wall -Wextra -Werror
-DEBUGFLAGS=-ggdb3 -DDEBUG
+CXXFLAGS=-Wall -Wextra -Werror -O2
 
 BUILD_DIR=build
 SRC_DIR=src
@@ -33,11 +32,10 @@ $(BUILD_DIR)/$(EXECUTABLE): $(MAIN_FILE) $(SRC_FILES_EXCLUDING_MAIN)
 clean:
 	$(RM) -r $(BUILD_DIR)
 
-debug: CXXFLAGS += $(DEBUGFLAGS)
-debug: all 
+debug: clean
+	$(MAKE) EXECUTABLE=deb all CXXFLAGS_DBG='-DDEBUG -ggdb3'
 
-run: $(BUILD_DIR)/$(EXECUTABLE)
-	@echo "Running with file $(TEST_FILE)"
-	./$(BUILD_DIR)/$(EXECUTABLE)
+prof: clean
+	$(MAKE) EXECUTABLE=prof all CXXFLAGS='-pg'
 
 .PHONY: all clean debug
