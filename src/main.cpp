@@ -8,7 +8,9 @@
 #include <cstdlib>
 #include <ctime>
 #include <iostream>
+#include <sys/time.h>
 #include <unistd.h>
+#define TIMEOUT 9800
 
 // Optimizations:
 // Fix passing arguments passing by value everywhere
@@ -66,7 +68,13 @@ int main(int argc, char *argv[]) {
   Arguments args = parse_args(argc, argv);
 #ifndef DEBUG
   std::signal(SIGALRM, timeout_handler);
-  alarm(9);
+  struct itimerval timer;
+  timer.it_value.tv_sec = TIMEOUT / 1000;
+  timer.it_value.tv_usec = (TIMEOUT % 1000) * 1000;
+  timer.it_interval.tv_sec = 0;
+  timer.it_interval.tv_usec = 0;
+
+  setitimer(ITIMER_REAL, &timer, nullptr);
 #endif
   Level *level;
 
