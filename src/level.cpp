@@ -47,9 +47,9 @@ public:
   int getSize() const { return size; }
   std::optional<int> getBombCount() const { return bombCount; }
 
-  std::vector<Vector2> getUnkownAdjacent(Vector2 pos) const {
+  std::vector<Vector2> getUnknownAdjacent(Vector2 pos) const {
     std::vector<Vector2> unkowns;
-    for (auto &direction : Vector2::AllDirections()) {
+    for (auto &direction : directions) {
       Vector2 newPos = pos + direction;
       if (!isOutOfBounds(newPos) && !playingField[newPos].discovered)
         unkowns.push_back(newPos);

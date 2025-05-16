@@ -121,7 +121,7 @@ public:
       if (value == 0)
         continue;
       std::vector<int> variables;
-      for (auto &adjacent : level->getUnkownAdjacent(position)) {
+      for (auto &adjacent : level->getUnknownAdjacent(position)) {
         variables.push_back(hasBombVariables[adjacent]);
       }
       if (variables.empty() && value > 0)
@@ -133,7 +133,7 @@ public:
     }
 
     for (auto &[position, value] : newOpenCells) {
-      for (auto &adjacent : level->getUnkownAdjacent(position)) {
+      for (auto &adjacent : level->getUnknownAdjacent(position)) {
         if (checkBomb(adjacent)) {
           level->mark(adjacent);
           foundBombCount++;
