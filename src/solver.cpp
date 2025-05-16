@@ -28,6 +28,20 @@ private:
     return result;
   }
 
+  void generateCombinations(const std::vector<int> &variables, int r,
+                            std::vector<std::vector<int>> &result,
+                            std::vector<int> &current, int start) {
+    if (static_cast<int>(current.size()) == r) {
+      result.push_back(current);
+      return;
+    }
+    for (int i = start; i < static_cast<int>(variables.size()); ++i) {
+      current.push_back(variables[i]);
+      generateCombinations(variables, r, result, current, i + 1);
+      current.pop_back();
+    }
+  }
+
 public:
   Solver() {
     if (system("which " SOLVER " > /dev/null 2>&1") != 0)
@@ -100,6 +114,50 @@ public:
                   "All arguments must be convertible to int");
     std::vector<int> clause = {static_cast<int>(ints)...};
     return solve(clause);
+  }
+
+  void addCardinalityConstraint(const std::vector<int> &variables, int k) {
+    int n = variables.size();
+    if (n < k)
+      throw std::logic_error("More bombs than avaliable spaces.");
+
+    // Caso especial k=0
+    if (k == 0) {
+      for (int var : variables) {
+        addClause(-var);
+      }
+      return;
+    }
+
+    // Caso especial k=n
+    if (k == n) {
+      for (int var : variables) {
+        addClause(var);
+      }
+      return;
+    }
+
+    // L
+    int rL = n - k + 1;
+    std::vector<std::vector<int>> combinationsL;
+    std::vector<int> currentL;
+    generateCombinations(variables, rL, combinationsL, currentL, 0);
+    for (const auto &combination : combinationsL) {
+      addClause(combination);
+    }
+
+    // U
+    int rU = k + 1;
+    std::vector<std::vector<int>> combinationsU;
+    std::vector<int> currentU;
+    generateCombinations(variables, rU, combinationsU, currentU, 0);
+    for (const auto &combination : combinationsU) {
+      std::vector<int> negatedCombination;
+      for (int var : combination) {
+        negatedCombination.push_back(-var);
+      }
+      addClause(negatedCombination);
+    }
   }
 
   friend std::ostream &operator<<(std::ostream &os, const Solver &s) {

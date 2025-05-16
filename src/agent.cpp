@@ -9,21 +9,6 @@
 #include <unordered_set>
 #include <vector>
 
-// Função geradora de combinações
-void generateCombinations(const std::vector<int> &variables, int r,
-                          std::vector<std::vector<int>> &result,
-                          std::vector<int> &current, int start) {
-  if (static_cast<int>(current.size()) == r) {
-    result.push_back(current);
-    return;
-  }
-  for (int i = start; i < static_cast<int>(variables.size()); ++i) {
-    current.push_back(variables[i]);
-    generateCombinations(variables, r, result, current, i + 1);
-    current.pop_back();
-  }
-}
-
 class Agent {
 private:
   Level *level;
@@ -65,50 +50,6 @@ public:
     return os;
   }
 
-  void generateClauses(const std::vector<int> &variables, int k) {
-    int n = variables.size();
-    if (n < k)
-      throw std::logic_error("More bombs than avaliable spaces.");
-
-    // Caso especial k=0
-    if (k == 0) {
-      for (int var : variables) {
-        solver.addClause(-var);
-      }
-      return;
-    }
-
-    // Caso especial k=n
-    if (k == n) {
-      for (int var : variables) {
-        solver.addClause(var);
-      }
-      return;
-    }
-
-    // L
-    int rL = n - k + 1;
-    std::vector<std::vector<int>> combinationsL;
-    std::vector<int> currentL;
-    generateCombinations(variables, rL, combinationsL, currentL, 0);
-    for (const auto &combination : combinationsL) {
-      solver.addClause(combination);
-    }
-
-    // U
-    int rU = k + 1;
-    std::vector<std::vector<int>> combinationsU;
-    std::vector<int> currentU;
-    generateCombinations(variables, rU, combinationsU, currentU, 0);
-    for (const auto &combination : combinationsU) {
-      std::vector<int> negatedCombination;
-      for (int var : combination) {
-        negatedCombination.push_back(-var);
-      }
-      solver.addClause(negatedCombination);
-    }
-  }
-
   bool decide() {
     if (level->bombCount.has_value() &&
         level->bombCount.value() == foundBombCount) {
@@ -146,11 +87,10 @@ public:
             std::to_string(position.y) + " shows " + std::to_string(value) +
             " bombs but has no unknown neighbors");
 
-      generateClauses(variables, value);
+      solver.addCardinalityConstraint(variables, value);
     }
 
     // TODO: adicionar thread pool para otimização de verificação
-    // TODO: adicionar fila para locais indecididos
     bool madeProgress = false;
     for (auto it = toVisit.begin(); it != toVisit.end();) {
       Vector2 pos = *it;
